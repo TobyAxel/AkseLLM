@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FiType, FiCpu } from 'react-icons/fi';
 
 type ModalProps = {
     availableModels: string[];
@@ -27,7 +28,7 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
             />
 
             {/* Modal */}
-            <div className="relative bg-linear-to-b from-neutral-800 via-neutral-850 to-neutral-900 w-md rounded-xl shadow-2xl border border-neutral-700/50 overflow-hidden">
+            <div className="relative bg-linear-to-b from-neutral-800 via-neutral-800 to-neutral-900 w-md rounded-xl shadow-2xl border border-neutral-700/50 overflow-hidden">
 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-linear-to-br from-neutral-700/10 to-transparent pointer-events-none" />
@@ -49,12 +50,13 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
                             Name
                         </label>
                         <div className="relative">
+                            <FiType className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" size={18} />
                             <input
                                 id="name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-neutral-900/50 text-white px-4 py-2.5 rounded-lg border border-neutral-700 focus:outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/20 transition-all placeholder:text-neutral-500"
+                                className="w-full bg-neutral-900/50 text-white pl-10 pr-4 py-2.5 rounded-lg border border-neutral-700 focus:outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/20 transition-all placeholder:text-neutral-500"
                                 placeholder="Enter model name"
                                 autoFocus
                             />
@@ -67,11 +69,12 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
                             Model
                         </label>
                         <div className="relative">
+                            <FiCpu className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 z-10" size={18} />
                             <select
                                 id="model"
                                 value={selectedModel}
                                 onChange={(e) => setSelectedModel(e.target.value)}
-                                className="w-full bg-neutral-900/50 text-white px-4 py-2.5 rounded-lg border border-neutral-700 focus:outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/20 transition-all appearance-none cursor-pointer"
+                                className="w-full bg-neutral-900/50 text-white pl-10 pr-10 py-2.5 rounded-lg border border-neutral-700 focus:outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/20 transition-all appearance-none cursor-pointer"
                             >
                                 {availableModels.map((model) => (
                                     <option key={model} value={model} className="bg-neutral-800">
@@ -94,6 +97,7 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
                         <button
                             type="button"
                             onClick={onModalClose}
+                            aria-label='Close LLM creation modal'
                             className="px-5 py-2.5 cursor-pointer bg-neutral-800/50 text-neutral-300 rounded-lg hover:bg-neutral-700/50 transition-all duration-200 font-medium border border-neutral-700/50 hover:border-neutral-600"
                         >
                             Cancel
@@ -101,6 +105,7 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
                         <button
                             type="submit"
                             disabled={!name.trim() || !selectedModel}
+                            aria-label='Create LLM model'
                             className="px-5 py-2.5 cursor-pointer bg-linear-to-r from-neutral-700 to-neutral-600 text-white rounded-lg hover:from-neutral-600 hover:to-neutral-500 transition-all duration-200 font-medium shadow-lg shadow-neutral-900/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-neutral-700 disabled:hover:to-neutral-600"
                         >
                             Create

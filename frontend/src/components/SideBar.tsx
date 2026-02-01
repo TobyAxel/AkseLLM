@@ -2,8 +2,11 @@ import { twMerge } from "tailwind-merge";
 import clsx from "clsx";
 import { useState } from "react";
 import type { LLM } from "../domain/llm";
+import type { UserData } from "../domain/userdata";
 
 type SideBarProps = {
+  loggedIn: boolean;
+  userdata: UserData | null;
   llms: LLM[];
   selectedLLMId: string | null;
   onSelectLLM: (id: string) => void;
@@ -11,7 +14,7 @@ type SideBarProps = {
   onAccountClick: () => void;
 };
 
-function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
+function SideBar({ loggedIn, userdata, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -39,6 +42,7 @@ function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountCli
         onClick={() => setIsOpen(!isOpen)}
         className="absolute right-2 top-2 cursor-pointer w-10 h-10 pb-1 rounded-lg hover:bg-neutral-800/50 transition-all duration-200 flex items-center justify-center group backdrop-blur-sm"
         title={isOpen ? "Close Sidebar" : "Open Sidebar"}
+        aria-label={isOpen ? "Close Sidebar" : "Open Sidebar"}
       >
         <span className="text-neutral-400 group-hover:text-white transition-colors text-lg">
           {isOpen ? "✖" : "☰"}
@@ -86,34 +90,45 @@ function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountCli
         </ul>
 
         <button
-          className="cursor-pointer mt-4 w-full h-9 rounded-lg border-2 border-dashed border-neutral-700 hover:border-neutral-600 hover:bg-neutral-800/30 transition-all duration-200 flex items-center justify-center group"
+          className={twMerge(clsx("mt-4 w-full h-9 rounded-lg border-2 border-dashed border-neutral-700 transition-all duration-200 flex items-center justify-center group",
+            loggedIn ? "cursor-pointer hover:border-neutral-600 hover:bg-neutral-800/30" : null))}
           onClick={onCreateClick}
+          aria-label="Create new LLM"
+          disabled={!loggedIn}
         >
-          <span className="text-neutral-500 group-hover:text-neutral-300 font-bold text-lg">+</span>
-          <span className="ml-2 text-sm text-neutral-500 group-hover:text-neutral-300 font-medium">New LLM</span>
+          <span className={twMerge(clsx("text-neutral-500 font-bold text-lg", loggedIn ? "group-hover:text-neutral-300" : null))}>+</span>
+          <span className={twMerge(clsx("ml-2 text-sm text-neutral-500 font-medium", loggedIn ? "group-hover:text-neutral-300" : null))}>New LLM</span>
         </button>
       </div>
 
       {/* Profile */}
-      <div className={twMerge(clsx(
-        "absolute flex items-center bottom-2 left-1.5 cursor-pointer h-12 rounded-lg hover:bg-neutral-800/50 transition-all duration-300 ease-in-out group backdrop-blur-sm border border-transparent hover:border-neutral-700/50",
-        isOpen ? "w-58.5" : "w-10"))}
-        onClick={onAccountClick}>
-        <div className="relative">
-          <img
-            src="/blank-pfp.png"
-            className="w-8 h-8 ml-1 rounded-full ring-2 ring-neutral-700 group-hover:ring-neutral-600 transition-all shrink-0"
-          />
-        </div>
-        {isOpen && (
-          <div className="absolute left-12 flex-1 min-w-0">
-            <span className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors block truncate">
-              username1234
-            </span>
-            <span className="text-xs text-neutral-500">Online</span>
+      {loggedIn ?
+        (<>
+          <div className={twMerge(clsx(
+            "absolute flex items-center bottom-2 left-1.5 cursor-pointer h-12 rounded-lg hover:bg-neutral-800/50 transition-all duration-300 ease-in-out group backdrop-blur-sm border border-transparent hover:border-neutral-700/50",
+            isOpen ? "w-58.5" : "w-10"))}
+            onClick={onAccountClick}
+            aria-label="Account settings"
+            role="button"
+          >
+
+            <div className="relative">
+              <img
+                src="/blank-pfp.png"
+                className="w-8 h-8 ml-1 rounded-full ring-2 ring-neutral-700 group-hover:ring-neutral-600 transition-all shrink-0"
+              />
+            </div>
+
+            {isOpen && (
+              <div className="absolute left-12 flex-1 min-w-0">
+                <span className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors block truncate">
+                  {userdata?.username || "Guest"}
+                </span>
+                <span className="text-xs text-neutral-500">{userdata?.plan || "none"}</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>) : null}
     </div>
   );
 }
