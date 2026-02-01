@@ -8,9 +8,10 @@ type SideBarProps = {
   selectedLLMId: string | null;
   onSelectLLM: (id: string) => void;
   onCreateClick: () => void;
+  onAccountClick: () => void;
 };
 
-function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick }: SideBarProps) {
+function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -96,8 +97,8 @@ function SideBar({ llms, selectedLLMId, onSelectLLM, onCreateClick }: SideBarPro
       {/* Profile */}
       <div className={twMerge(clsx(
         "absolute flex items-center bottom-2 left-1.5 cursor-pointer h-12 rounded-lg hover:bg-neutral-800/50 transition-all duration-300 ease-in-out group backdrop-blur-sm border border-transparent hover:border-neutral-700/50",
-        isOpen ? "w-58.5" : "w-10"
-      ))}>
+        isOpen ? "w-58.5" : "w-10"))}
+        onClick={onAccountClick}>
         <div className="relative">
           <img
             src="/blank-pfp.png"
