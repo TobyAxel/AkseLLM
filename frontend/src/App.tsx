@@ -72,6 +72,7 @@ function App() {
   }
 
   const handleLogout = () => {
+    setLogoutModalOpen(false);
     setLoggedIn(false);
     window.location.reload();
   }
