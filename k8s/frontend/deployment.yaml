@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: axilian/frontend:latest
+        image: axilian/aksellm-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
