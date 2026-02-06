@@ -138,7 +138,7 @@ This is currently a solo project in early stages. Contributions, suggestions, an
 
 ## License
 
-MIT
+AGPL-3.0 license
 
 ---
 
