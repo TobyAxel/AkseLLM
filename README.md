@@ -63,7 +63,7 @@ In progress:
 - Docker
 - Kubernetes cluster (local or cloud)
 - kubectl configured
-- .NET 8 SDK (for backend development)
+- .NET 10 SDK (for backend development)
 - Node.js & npm (for frontend development)
 
 ### Running Locally
