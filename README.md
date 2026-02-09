@@ -16,19 +16,19 @@ AkseLLM provides a streamlined interface for creating, configuring, and managing
 
 ## Current Status
 
-🚧 **Early Development** 🚧
+**Early Development**
 
 Currently implemented:
-- ✅ Basic frontend UI design
-- ✅ Frontend Docker containerization
-- ✅ Kubernetes deployment configuration for frontend
-- ✅ Backend API scaffolding (.NET WebAPI with controllers)
+- Basic frontend UI design
+- Frontend Docker containerization
+- Kubernetes deployment configuration for frontend
+- Backend API scaffolding (.NET WebAPI with controllers)
 
 In progress:
-- 🔨 Backend services for K8s cluster management
-- 🔨 LLM deployment orchestration
-- 🔨 Model configuration management
-- 🔨 Authentication & user management
+- Backend services for K8s cluster management
+- LLM deployment orchestration
+- Model configuration management
+- Authentication & user management
 
 ## Planned Features
 
