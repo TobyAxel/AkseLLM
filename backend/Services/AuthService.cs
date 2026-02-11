@@ -129,6 +129,7 @@ namespace backend.Services
                 throw new Exception("Password must contain at least one special character");
             }
         }
+        
         private async Task<Profile> CreateProfile(Supabase.Client supabase, Supabase.Gotrue.User user, string? username = null)
         {
             // Create and return user's profile info
