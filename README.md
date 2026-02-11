@@ -1,4 +1,5 @@
 # AkseLLM
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
 A web application for managing and deploying custom Large Language Models on Kubernetes.
 
@@ -138,7 +139,10 @@ This is currently a solo project in early stages. Contributions, suggestions, an
 
 ## License
 
-AGPL-3.0 license
+Licensed under [CC BY-NC-SA 4.0](LICENSE) - No commercial use allowed.
+
+[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
+[cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
 
 ---
 
