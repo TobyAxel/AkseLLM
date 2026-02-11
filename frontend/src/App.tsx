@@ -5,14 +5,14 @@ import LLMCreateModal from "./components/LLMCreateModal";
 import AuthModal from "./components/AuthModal";
 import LogoutConfirmModal from "./components/LogoutConfirmModal";
 import UserSettingsModal from "./components/UserSettingsModal";
-import type { UserData } from "./domain/userdata";
+import type { Profile } from "./domain/profile";
 
 // Temporary variables for frontend testing
 const availableModelsTemp = ["Gemini 3 Pro", "GPT-5", "Claude 3.7 Sonnet", "Grok 4"]
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [llms, setLLMs] = useState<LLM[]>([]);
   const [selectedLLMId, setSelectedLLMId] = useState<string | null>(null);
   const [llmCreationModalOpen, setLLMCreationModalOpen] = useState(false);
@@ -47,9 +47,10 @@ function App() {
 
   const handleAuthSubmit = (data: any) => {
     console.log(data);
-    setUserData({
+    setUserProfile({
       username: data.username ? data.username : data.email,
-      plan: 'free plan'
+      plan: 'free',
+      created_at: "12/01/2025"
     })
     setLoggedIn(true);
   }
@@ -86,8 +87,8 @@ function App() {
       {llmCreationModalOpen ? <LLMCreateModal availableModels={availableModelsTemp} onLLMCreate={createLLM} onModalClose={closeCreateModal} /> : null}
       {authModalOpen ? <AuthModal onSubmit={handleAuthSubmit} /> : null}
       {logoutModalOpen ? <LogoutConfirmModal onModalClose={closeLogoutModal} logout={handleLogout}/> : null}
-      {userSettingsModalOpen ? (<UserSettingsModal userdata={userData} onModalClose={closeUserSettingsModal} onLogout={openLogoutModal} />) : null}
-      <SideBar loggedIn={loggedIn} userdata={userData} llms={llms} selectedLLMId={selectedLLMId} onSelectLLM={handleLLMSelection} onCreateClick={openCreateModal} onAccountClick={openUserSettingsModal} />
+      {userSettingsModalOpen ? (<UserSettingsModal userprofile={userProfile} onModalClose={closeUserSettingsModal} onLogout={openLogoutModal} />) : null}
+      <SideBar loggedIn={loggedIn} userprofile={userProfile} llms={llms} selectedLLMId={selectedLLMId} onSelectLLM={handleLLMSelection} onCreateClick={openCreateModal} onAccountClick={openUserSettingsModal} />
     </div>
   )
 }

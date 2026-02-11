@@ -3,7 +3,7 @@ import { FiUser, FiSettings, FiCreditCard, FiLogOut, FiX } from "react-icons/fi"
 import AccountState from "./UserSettingsModalStates/AccountState";
 import GeneralState from "./UserSettingsModalStates/GeneralState";
 import PlanState from "./UserSettingsModalStates/PlanState";
-import type { UserData } from "../domain/userdata";
+import type { Profile } from "../domain/profile";
 
 type Tab = {
     id: "account" | "general" | "plan";
@@ -13,16 +13,16 @@ type Tab = {
 };
 
 type UserSettingsModalProps = {
-    userdata: UserData | null;
+    userprofile: Profile | null;
     onModalClose: () => void;
     onLogout: () => void;
 };
 
-function UserSettingsModal({ userdata, onModalClose, onLogout }: UserSettingsModalProps) {
+function UserSettingsModal({ userprofile, onModalClose, onLogout }: UserSettingsModalProps) {
     const tabs: Tab[] = [
         { id: "general", label: "General", icon: FiSettings, content: <GeneralState/> },
-        { id: "account", label: "Account", icon: FiUser, content: <AccountState userdata={userdata}/> },
-        { id: "plan", label: "Plan", icon: FiCreditCard, content: <PlanState userdata={userdata}/> }
+        { id: "account", label: "Account", icon: FiUser, content: <AccountState userprofile={userprofile}/> },
+        { id: "plan", label: "Plan", icon: FiCreditCard, content: <PlanState userprofile={userprofile}/> }
     ];
 
     const [activeTab, setActiveTab] = useState<Tab>(tabs[0]);

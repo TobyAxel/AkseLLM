@@ -2,6 +2,8 @@ namespace backend.Models.DTOs
 {
     public class AuthResponseDto
     {
-        public required string Token { get; set; }
+        public string? Token { get; set; }
+        public Profile? UserProfile { get; set; }
+        public required string Message { get; set; }
     }
 }
