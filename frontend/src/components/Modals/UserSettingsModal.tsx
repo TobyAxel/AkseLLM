@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { FiUser, FiSettings, FiCreditCard, FiLogOut, FiX } from "react-icons/fi";
-import AccountState from "./UserSettingsModalStates/AccountState";
-import GeneralState from "./UserSettingsModalStates/GeneralState";
-import PlanState from "./UserSettingsModalStates/PlanState";
-import type { Profile } from "../domain/profile";
+import AccountState from "../ModalStates/UserSettingsModalStates/AccountState";
+import GeneralState from "../ModalStates/UserSettingsModalStates/GeneralState";
+import PlanState from "../ModalStates/UserSettingsModalStates/PlanState";
+import type { Profile } from "../../domain/profile";
 
 type Tab = {
     id: "account" | "general" | "plan";

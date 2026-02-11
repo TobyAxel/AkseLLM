@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import SideBar from "./components/SideBar";
 import type { LLM } from "./domain/llm";
-import LLMCreateModal from "./components/LLMCreateModal";
-import AuthModal from "./components/AuthModal";
-import LogoutConfirmModal from "./components/LogoutConfirmModal";
-import UserSettingsModal from "./components/UserSettingsModal";
+import LLMCreateModal from "./components/Modals/LLMCreateModal";
+import AuthModal from "./components/Modals/AuthModal";
+import LogoutConfirmModal from "./components/Modals/LogoutConfirmModal";
+import UserSettingsModal from "./components/Modals/UserSettingsModal";
 import type { Profile } from "./domain/profile";
 
 // Temporary variables for frontend testing

@@ -4,4 +4,5 @@ export type AuthResponseDto = {
     token: string;
     user_profile: Profile;
     message: string;
+    success: boolean;
 }
