@@ -1,3 +1,4 @@
+using backend.Models;
 using backend.Models.DTOs;
 
 namespace backend.Services
@@ -9,6 +10,12 @@ namespace backend.Services
             return new AuthResponseDto
             {
                 Token = "dummy-token-register",
+                UserProfile = new Profile{
+                    Username = "TestUser",
+                    Plan = "free",
+                    CreatedAt = DateTime.Now,
+                },
+                Message = "This works"
             };
         }
 
@@ -17,6 +24,12 @@ namespace backend.Services
             return new AuthResponseDto
             {
                 Token = "dummy-token-login",
+                UserProfile = new Profile{
+                    Username = "TestUser",
+                    Plan = "free",
+                    CreatedAt = DateTime.Now,
+                },
+                Message = "This works"
             };
         }
     }

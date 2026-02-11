@@ -16,7 +16,6 @@ type SideBarProps = {
 
 function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
   const [isOpen, setIsOpen] = useState(true);
-
   return (
     <div className={twMerge(clsx(
       "h-dvh bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950 relative overflow-hidden transition-all duration-300 ease-in-out border-r border-neutral-800/50",
