@@ -20,7 +20,7 @@ type UserSettingsModalProps = {
 
 function UserSettingsModal({ userprofile, onModalClose, onLogout }: UserSettingsModalProps) {
     const tabs: Tab[] = [
-        { id: "general", label: "General", icon: FiSettings, content: <GeneralState/> },
+        { id: "general", label: "General", icon: FiSettings, content: <GeneralState userprofile={userprofile}/> },
         { id: "account", label: "Account", icon: FiUser, content: <AccountState userprofile={userprofile}/> },
         { id: "plan", label: "Plan", icon: FiCreditCard, content: <PlanState userprofile={userprofile}/> }
     ];

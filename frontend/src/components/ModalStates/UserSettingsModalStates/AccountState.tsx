@@ -14,7 +14,7 @@ function AccountState({ userprofile }: AccountStateProps) {
 
             {/* User Info Display */}
             <div className="space-y-3 pt-4 border-t border-neutral-700/50">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-6">
                     <img
                         src="/blank-pfp.png"
                         className="w-16 h-16 rounded-full ring-2 ring-neutral-700"
