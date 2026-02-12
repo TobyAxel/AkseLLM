@@ -24,7 +24,7 @@ namespace backend.Services
             {
                 Data = new Dictionary<string, object>
                 {
-                    { "username", registerDto.Username },
+                    { "display_name", registerDto.Username },
                     { "plan", "free" }
                 }
             };
@@ -47,7 +47,7 @@ namespace backend.Services
                 Token = signInResponse!.AccessToken,
                 User = new ProfileDto{
                     Id = signInResponse.User!.Id!,
-                    Username = signInResponse.User.UserMetadata["username"].ToString()!,
+                    Username = signInResponse.User.UserMetadata["display_name"].ToString()!,
                     Email = signInResponse.User.Email!,
                     Plan = signInResponse.User.UserMetadata["plan"].ToString()!,
                     CreatedAt = signInResponse.User.CreatedAt
@@ -73,7 +73,7 @@ namespace backend.Services
                 Token = signInResponse!.AccessToken,
                 User = new ProfileDto{
                     Id = signInResponse.User!.Id!,
-                    Username = signInResponse.User.UserMetadata["username"].ToString()!,
+                    Username = signInResponse.User.UserMetadata["display_name"].ToString()!,
                     Email = signInResponse.User.Email!,
                     Plan = signInResponse.User.UserMetadata["plan"].ToString()!,
                     CreatedAt = signInResponse.User.CreatedAt
@@ -97,7 +97,7 @@ namespace backend.Services
             return new ProfileDto
             {
                 Id = user.Id!,
-                Username = user.UserMetadata["username"].ToString()!,
+                Username = user.UserMetadata["display_name"].ToString()!,
                 Email = user.Email!,
                 Plan = user.UserMetadata["plan"].ToString()!,
                 CreatedAt = user.CreatedAt
