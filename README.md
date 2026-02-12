@@ -21,6 +21,7 @@ AkseLLM provides a streamlined interface for creating, configuring, and managing
 
 Currently implemented:
 - Basic frontend UI design
+- User authentication system
 - Frontend Docker containerization
 - Kubernetes deployment configuration for frontend
 - Backend API scaffolding (.NET WebAPI with controllers)
@@ -29,7 +30,6 @@ In progress:
 - Backend services for K8s cluster management
 - LLM deployment orchestration
 - Model configuration management
-- Authentication & user management
 
 ## Planned Features
 
@@ -38,7 +38,6 @@ In progress:
 - Manage multiple LLM deployments from a single interface
 - Monitor model performance and resource usage
 - API proxy for inference requests
-- User authentication and workspace management
 
 ## Architecture
 ```
@@ -70,18 +69,33 @@ In progress:
 ### Running Locally
 
 **Frontend:**
-```bash
+- You need to add a .env file to the root (frontend/) folder, and add this:
+```
+VITE_API_URL=your_backend_url
+```
+
+- Run these commands:
+```
 cd frontend
 npm install
 npm run dev
 ```
 
 **Backend:**
-```bash
+- You need to add a .env file to the root (backend/) folder, and add this:
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_public_supabase_key
+```
+
+- Run these commands:
+```
 cd backend
 dotnet restore
 dotnet run
 ```
+
+- NOTE! You need to turn off email confirmation in Supabase, or else issues will arise from the registering functionality as it tries to auto-login the user after registration. This is not catastrophic, but it can lead to unexpected consequences.
 
 ### Deploying to Kubernetes
 
@@ -96,7 +110,7 @@ If you want to modify the code and use your own Docker Hub repository:
 ```bash
 # Build and push to your own Docker Hub
 cd frontend
-docker build -t YOUR_DOCKERHUB_USERNAME/aksellm-frontend:latest .
+docker build -t YOUR_DOCKERHUB_USERNAME/aksellm-frontend:latest
 docker push YOUR_DOCKERHUB_USERNAME/aksellm-frontend:latest
 
 # Update k8s/frontend/ manifests to use your image, then deploy
@@ -115,7 +129,7 @@ aksellm/
 ├── backend/           # .NET WebAPI
 │   ├── Controllers/
 │   ├── Services/
-│   ├── Models/
+│   ├── Models, Filters, Exceptions, Helpers...
 │   └── ...
 └── k8s/               # Kubernetes manifests
     ├── frontend/      # Frontend deployment & service
@@ -127,7 +141,7 @@ aksellm/
 
 - [ ] Implement K8s service layer in backend
 - [ ] Build model deployment functionality
-- [ ] Add authentication system
+- [x] Add authentication system
 - [ ] Create inference proxy endpoint
 - [ ] Implement monitoring dashboard
 - [ ] Add support for popular LLM formats (GGUF, SafeTensors, etc.)
