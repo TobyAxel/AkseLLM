@@ -19,6 +19,9 @@ function RegisterState({ onChangeState, onSubmit }: StateProps) {
 
     const isFormValid =
         username.trim() &&
+        username.length >= 3 &&
+        username.length <= 20 &&
+        /^[a-zA-Z0-9_]+$/.test(username) &&
         email.trim() &&
         password &&
         password === confirmPassword &&
@@ -46,6 +49,20 @@ function RegisterState({ onChangeState, onSubmit }: StateProps) {
                         placeholder="Enter username"
                     />
                 </div>
+
+                {/* Username Requirements */}
+                {username && (
+                    <div className="space-y-1 text-xs mt-2">
+                        <div className={`flex items-center gap-2 ${username.length >= 3 && username.length <= 20 ? 'text-green-400' : 'text-neutral-500'}`}>
+                            <span>{username.length >= 3 && username.length <= 20 ? '✓' : '○'}</span>
+                            <span>3-20 characters</span>
+                        </div>
+                        <div className={`flex items-center gap-2 ${/^[a-zA-Z0-9_]+$/.test(username) ? 'text-green-400' : 'text-neutral-500'}`}>
+                            <span>{/^[a-zA-Z0-9_]+$/.test(username) ? '✓' : '○'}</span>
+                            <span>Only letters, numbers, and underscores</span>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Email Input */}

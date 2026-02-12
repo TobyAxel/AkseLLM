@@ -1,10 +1,10 @@
-import type { UserData } from "../../domain/userdata";
+import type { Profile } from "../../../domain/profile";
 
 type AccountStateProps = {
-    userdata: UserData | null;
+    userprofile: Profile | null;
 };
 
-function AccountState({ userdata }: AccountStateProps) {
+function AccountState({ userprofile }: AccountStateProps) {
     return (
         <div className="space-y-6">
             <div>
@@ -22,7 +22,7 @@ function AccountState({ userdata }: AccountStateProps) {
                     />
                     <div>
                         <p className="text-sm font-medium text-neutral-300">Username</p>
-                        <p className="text-white font-semibold">{userdata?.username || "Guest"}</p>
+                        <p className="text-white font-semibold">{userprofile?.username || ""}</p>
                     </div>
                 </div>
             </div>

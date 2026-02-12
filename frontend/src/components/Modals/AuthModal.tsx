@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
-import LogInState from "./AuthModalStates/LogInState";
-import RegisterState from "./AuthModalStates/RegisterState";
+import LogInState from "../ModalStates/AuthModalStates/LogInState";
+import RegisterState from "../ModalStates/AuthModalStates/RegisterState";
 
 type AuthData = {
     type: 'login' | 'register';
     username?: string;
-    email?: string;
+    email: string;
     password: string;
 };
 
@@ -20,7 +20,7 @@ function AuthModal({ onSubmit }: ModalProps) {
         e.preventDefault(); // Handled by children
     };
 
-    const handleLoginSubmit = (data: { username: string; password: string }) => {
+    const handleLoginSubmit = (data: { email: string; password: string }) => {
         onSubmit({ type: 'login', ...data });
     };
 

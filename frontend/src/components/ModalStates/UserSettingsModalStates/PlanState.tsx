@@ -1,10 +1,10 @@
-import type { UserData } from "../../domain/userdata";
+import type { Profile } from "../../../domain/profile";
 
 type PlanStateProps = {
-    userdata: UserData | null;
+    userprofile: Profile | null;
 };
 
-function PlanState({ userdata }: PlanStateProps) {
+function PlanState({ userprofile }: PlanStateProps) {
     return (
         <div className="space-y-6">
             <div>

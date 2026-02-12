@@ -2,11 +2,11 @@ import { twMerge } from "tailwind-merge";
 import clsx from "clsx";
 import { useState } from "react";
 import type { LLM } from "../domain/llm";
-import type { UserData } from "../domain/userdata";
+import type { Profile } from "../domain/profile";
 
 type SideBarProps = {
   loggedIn: boolean;
-  userdata: UserData | null;
+  userprofile: Profile | null;
   llms: LLM[];
   selectedLLMId: string | null;
   onSelectLLM: (id: string) => void;
@@ -14,9 +14,8 @@ type SideBarProps = {
   onAccountClick: () => void;
 };
 
-function SideBar({ loggedIn, userdata, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
+function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
   const [isOpen, setIsOpen] = useState(true);
-
   return (
     <div className={twMerge(clsx(
       "h-dvh bg-linear-to-b from-zinc-950 via-zinc-900 to-zinc-950 relative overflow-hidden transition-all duration-300 ease-in-out border-r border-neutral-800/50",
@@ -122,9 +121,9 @@ function SideBar({ loggedIn, userdata, llms, selectedLLMId, onSelectLLM, onCreat
             {isOpen && (
               <div className="absolute left-12 flex-1 min-w-0">
                 <span className="text-sm font-medium text-neutral-300 group-hover:text-white transition-colors block truncate">
-                  {userdata?.username || "Guest"}
+                  {userprofile?.username || "Guest"}
                 </span>
-                <span className="text-xs text-neutral-500">{userdata?.plan || "none"}</span>
+                <span className="text-xs text-neutral-500">{userprofile?.plan || "no"} plan</span>
               </div>
             )}
           </div>

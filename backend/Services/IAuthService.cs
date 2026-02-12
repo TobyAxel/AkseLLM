@@ -6,5 +6,6 @@ namespace backend.Services
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
         Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
+        Task<ProfileDto> GetCurrentUserAsync(string token);
     }
 }
