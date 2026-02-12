@@ -3,6 +3,7 @@ using backend.Models;
 using backend.Models.DTOs;
 using Supabase;
 using Supabase.Gotrue;
+using Supabase.Postgrest.Exceptions;
 
 namespace backend.Services
 {
@@ -40,12 +41,20 @@ namespace backend.Services
                 throw new Exception("Registration failed");
             }
 
-            var profile = await CreateProfile(supabase, signUpResponse.User, registerDto.Username);
+            var signIn = await supabase.Auth.SignIn(registerDto.Email, registerDto.Password);
+
+            Profile profile = await CreateProfile(supabase, signUpResponse.User, registerDto.Username);
     
             var response = new AuthResponseDto 
             {
                 Token = signUpResponse.AccessToken,
-                UserProfile = profile,
+                UserProfile = new ProfileDto{
+                    Id = profile.Id,
+                    Username = profile.Username,
+                    Email = profile.Email,
+                    Plan = profile.Plan,
+                    CreatedAt = profile.CreatedAt
+                },
                 Message = "Registration successful"
             };
 
@@ -82,7 +91,13 @@ namespace backend.Services
             var response = new AuthResponseDto 
             {
                 Token = signInResponse.AccessToken,
-                UserProfile = profile,
+                UserProfile = new ProfileDto{
+                    Id = profile.Id,
+                    Username = profile.Username,
+                    Email = profile.Email,
+                    Plan = profile.Plan,
+                    CreatedAt = profile.CreatedAt
+                },
                 Message = "Login successful"
             };
             
@@ -140,7 +155,7 @@ namespace backend.Services
                 Email = user.Email!,
                 CreatedAt = user.CreatedAt
             };
-
+            
             await supabase.From<Profile>().Insert(profile);
 
             return profile;

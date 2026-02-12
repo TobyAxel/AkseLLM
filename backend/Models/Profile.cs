@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Tokens;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
@@ -6,7 +7,8 @@ namespace backend.Models
     [Table("profiles")]
     public class Profile : BaseModel
     {
-        [PrimaryKey("id")]
+        [PrimaryKey("id", false)]
+        [Column("id")]
         public string Id { get; set; } = String.Empty;
 
         [Column("username")]
