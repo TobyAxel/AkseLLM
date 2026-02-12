@@ -19,17 +19,6 @@ namespace backend.Services
 
             var supabase = await SupabaseHelper.GetClientAsync();
 
-            // Check if username already exists in profiles table
-            var existingProfile = await supabase
-                .From<Profile>()
-                .Where(x => x.Username == registerDto.Username)
-                .Get();
-
-            if (existingProfile.Models.Any())
-            {
-                throw new Exception("Username already exists");
-            }
-
             // Sign up user
             var signUpResponse = await supabase.Auth.SignUp(
                 registerDto.Email, 
@@ -40,20 +29,16 @@ namespace backend.Services
             {
                 throw new Exception("Registration failed");
             }
-
-            var signIn = await supabase.Auth.SignIn(registerDto.Email, registerDto.Password);
-
-            Profile profile = await CreateProfile(supabase, signUpResponse.User, registerDto.Username);
     
             var response = new AuthResponseDto 
             {
                 Token = signUpResponse.AccessToken,
                 UserProfile = new ProfileDto{
-                    Id = profile.Id,
-                    Username = profile.Username,
-                    Email = profile.Email,
-                    Plan = profile.Plan,
-                    CreatedAt = profile.CreatedAt
+                    Id = signUpResponse.User.Id!,
+                    Username = "user134",
+                    Email = signUpResponse.User.Email!,
+                    Plan = "free",
+                    CreatedAt = signUpResponse.User.CreatedAt
                 },
                 Message = "Registration successful"
             };
@@ -75,28 +60,16 @@ namespace backend.Services
             {
                 throw new Exception("Login failed - Invalid Credentials");
             }
-
-            // Fetch profile
-            var profile = await supabase
-                .From<Profile>()
-                .Where(x => x.Id == signInResponse.User.Id)
-                .Single();
-            
-            // If no profile found, create one now
-            if (profile == null) 
-            {
-                profile = await CreateProfile(supabase, signInResponse.User);
-            }
-
+  
             var response = new AuthResponseDto 
             {
                 Token = signInResponse.AccessToken,
                 UserProfile = new ProfileDto{
-                    Id = profile.Id,
-                    Username = profile.Username,
-                    Email = profile.Email,
-                    Plan = profile.Plan,
-                    CreatedAt = profile.CreatedAt
+                    Id = signInResponse.User.Id!,
+                    Username = "user134",
+                    Email = signInResponse.User.Email!,
+                    Plan = "free",
+                    CreatedAt = signInResponse.User.CreatedAt
                 },
                 Message = "Login successful"
             };
@@ -143,22 +116,6 @@ namespace backend.Services
             {
                 throw new Exception("Password must contain at least one special character");
             }
-        }
-        
-        private async Task<Profile> CreateProfile(Supabase.Client supabase, Supabase.Gotrue.User user, string? username = null)
-        {
-            // Create and return user's profile info
-            var profile = new Profile 
-            {
-                Id = user.Id!,
-                Username = username ?? user.Email!,
-                Email = user.Email!,
-                CreatedAt = user.CreatedAt
-            };
-            
-            await supabase.From<Profile>().Insert(profile);
-
-            return profile;
         }
     }
 }
