@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using backend.Helpers;
 using backend.Models;
 using backend.Models.DTOs;
@@ -11,36 +12,47 @@ namespace backend.Services
     {
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
         {
+            // Trim and validate fields
             registerDto.Username = registerDto.Username.Trim();     
-
-            // Validate fields
             ValidateUsername(registerDto.Username);
             ValidatePassword(registerDto.Password);
 
+            // Connect to Supabase and attempt to sign up user
             var supabase = await SupabaseHelper.GetClientAsync();
 
-            // Sign up user
-            var signUpResponse = await supabase.Auth.SignUp(
-                registerDto.Email, 
-                registerDto.Password
+            var signUpOptions = new SignUpOptions
+            {
+                Data = new Dictionary<string, object>
+                {
+                    { "username", registerDto.Username },
+                    { "plan", "free" }
+                }
+            };
+
+            await supabase.Auth.SignUp(
+                registerDto.Email,
+                registerDto.Password, 
+                signUpOptions
             );
 
-            if (signUpResponse?.User == null)
-            {
-                throw new Exception("Registration failed");
-            }
-    
+            // Sign user in immediately after registration
+            var signInResponse = await supabase.Auth.SignIn(
+                registerDto.Email,
+                registerDto.Password
+            );
+            
+            // Form response DTO and return
             var response = new AuthResponseDto 
             {
-                Token = signUpResponse.AccessToken,
-                UserProfile = new ProfileDto{
-                    Id = signUpResponse.User.Id!,
-                    Username = "user134",
-                    Email = signUpResponse.User.Email!,
-                    Plan = "free",
-                    CreatedAt = signUpResponse.User.CreatedAt
+                Token = signInResponse!.AccessToken,
+                User = new ProfileDto{
+                    Id = signInResponse.User!.Id!,
+                    Username = signInResponse.User.UserMetadata["username"].ToString()!,
+                    Email = signInResponse.User.Email!,
+                    Plan = signInResponse.User.UserMetadata["plan"].ToString()!,
+                    CreatedAt = signInResponse.User.CreatedAt
                 },
-                Message = "Registration successful"
+                Message = ""
             };
 
             return response;
@@ -48,45 +60,60 @@ namespace backend.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
         {
+            // Connect to Supabase and attempt to sign in user
             var supabase = await SupabaseHelper.GetClientAsync();
-
-            // Sign in user
             var signInResponse = await supabase.Auth.SignIn(
                 loginDto.Email,
                 loginDto.Password
             );
-
-            if (signInResponse?.User == null) 
-            {
-                throw new Exception("Login failed - Invalid Credentials");
-            }
   
+            // Form response DTO and return
             var response = new AuthResponseDto 
             {
-                Token = signInResponse.AccessToken,
-                UserProfile = new ProfileDto{
-                    Id = signInResponse.User.Id!,
-                    Username = "user134",
+                Token = signInResponse!.AccessToken,
+                User = new ProfileDto{
+                    Id = signInResponse.User!.Id!,
+                    Username = signInResponse.User.UserMetadata["username"].ToString()!,
                     Email = signInResponse.User.Email!,
-                    Plan = "free",
+                    Plan = signInResponse.User.UserMetadata["plan"].ToString()!,
                     CreatedAt = signInResponse.User.CreatedAt
                 },
-                Message = "Login successful"
+                Message = ""
             };
             
             return response;
+        }
+
+        public async Task<ProfileDto> GetCurrentUserAsync(string token)
+        {
+            var supabase = await SupabaseHelper.GetClientAsync();
+            var user = await supabase.Auth.GetUser(token);
+
+            if (user == null)
+            {
+                throw new ValidationException("Invalid token");
+            }
+
+            return new ProfileDto
+            {
+                Id = user.Id!,
+                Username = user.UserMetadata["username"].ToString()!,
+                Email = user.Email!,
+                Plan = user.UserMetadata["plan"].ToString()!,
+                CreatedAt = user.CreatedAt
+            };
         }
 
         private void ValidateUsername(string username)
         {
             if (username.Length < 3 || username.Length > 20)
             {
-                throw new Exception("Username must be 3-20 characters");
+                throw new ValidationException("Username must be 3-20 characters");
             }
             
             if (!username.All(c => char.IsLetterOrDigit(c) || c == '_'))
             {
-                throw new Exception("Username can only contain letters, numbers, and underscores");
+                throw new ValidationException("Username can only contain letters, numbers, and underscores");
             }
         }
         
@@ -94,27 +121,27 @@ namespace backend.Services
         {
             if (password.Length < 8)
             {
-                throw new Exception("Password must be at least 8 characters");
+                throw new ValidationException("Password must be at least 8 characters");
             }
             
             if (!password.Any(char.IsUpper))
             {
-                throw new Exception("Password must contain at least one uppercase letter");
+                throw new ValidationException("Password must contain at least one uppercase letter");
             }
             
             if (!password.Any(char.IsLower))
             {
-                throw new Exception("Password must contain at least one lowercase letter");
+                throw new ValidationException("Password must contain at least one lowercase letter");
             }
             
             if (!password.Any(char.IsDigit))
             {
-                throw new Exception("Password must contain at least one number");
+                throw new ValidationException("Password must contain at least one number");
             }
             
             if (!password.Any(c => !char.IsLetterOrDigit(c)))
             {
-                throw new Exception("Password must contain at least one special character");
+                throw new ValidationException("Password must contain at least one special character");
             }
         }
     }

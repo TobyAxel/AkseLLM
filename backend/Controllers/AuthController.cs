@@ -1,8 +1,8 @@
+using System.Security.Claims;
 using backend.Models.DTOs;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
-using Sprache;
-using Supabase.Storage;
+using Supabase.Postgrest.Exceptions;
 
 namespace backend.Controllers
 {
@@ -20,35 +20,34 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto registerDto)
         {
-            try 
-            {
-                AuthResponseDto result = await _authService.RegisterAsync(registerDto);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(new AuthResponseDto {
-                    Message = e.Message,
-                    Success = false
-                });
-            }
+            AuthResponseDto result = await _authService.RegisterAsync(registerDto);
+            return Ok(result);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
         {
-            try 
+            AuthResponseDto result = await _authService.LoginAsync(loginDto);
+            return Ok(result);
+        }
+
+        [HttpGet("me")]
+        public async Task<ActionResult<ProfileDto>> GetCurrentUser([FromHeader(Name = "Authorization")] string authorization)
+        {
+            if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
             {
-                AuthResponseDto result = await _authService.LoginAsync(loginDto);
-                return Ok(result);
+                return Unauthorized(new { message = "Authorization header is missing or invalid" });
             }
-            catch (Exception e)
+
+            string token = authorization.Substring("Bearer ".Length).Trim();
+            ProfileDto user = await _authService.GetCurrentUserAsync(token);
+
+            if (user == null)
             {
-                return BadRequest(new AuthResponseDto {
-                    Message = e.Message,
-                    Success = false
-                });
+                return NotFound(new { message = "Invalid token" });
             }
+
+            return Ok(user);
         }
     }
 }
