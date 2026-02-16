@@ -8,6 +8,13 @@ using Supabase.Postgrest.Exceptions;
 
 namespace backend.Services
 {
+    public interface IAuthService
+    {
+        Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
+        Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
+        Task<ProfileDto> GetCurrentUserAsync(string token);
+    }
+
     public class AuthService : IAuthService
     {
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
@@ -89,10 +96,7 @@ namespace backend.Services
             var supabase = await SupabaseHelper.GetClientAsync();
             var user = await supabase.Auth.GetUser(token);
 
-            if (user == null)
-            {
-                throw new ValidationException("Invalid token");
-            }
+            if (user == null) throw new ValidationException("Invalid token");
 
             return new ProfileDto
             {

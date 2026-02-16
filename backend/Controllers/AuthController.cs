@@ -1,8 +1,7 @@
-using System.Security.Claims;
+using backend.Helpers;
 using backend.Models.DTOs;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
-using Supabase.Postgrest.Exceptions;
 
 namespace backend.Controllers
 {
@@ -34,18 +33,13 @@ namespace backend.Controllers
         [HttpGet("me")]
         public async Task<ActionResult<ProfileDto>> GetCurrentUser([FromHeader(Name = "Authorization")] string authorization)
         {
-            if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
-            {
-                return Unauthorized(new { message = "Authorization header is missing or invalid" });
-            }
+            string? token = await HandleApiKeyHelper.HandleApiKey(authorization);
 
-            string token = authorization.Substring("Bearer ".Length).Trim();
+            if (token == null) return Unauthorized(new { message = "Authorization header is missing or invalid" });
+
             ProfileDto user = await _authService.GetCurrentUserAsync(token);
 
-            if (user == null)
-            {
-                return NotFound(new { message = "Invalid token" });
-            }
+            if (user == null) return NotFound(new { message = "Invalid token" });
 
             return Ok(user);
         }

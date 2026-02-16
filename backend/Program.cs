@@ -27,6 +27,7 @@ builder.Services.AddControllers(options =>
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILLMsService, LLMsService>();
 
 // Configure OpenAPI
 builder.Services.AddOpenApi();

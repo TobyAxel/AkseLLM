@@ -6,7 +6,7 @@ import { api } from "./api";
 
 export const authService = {
     async register(data: RegisterDto): Promise<AuthResponseDto> {
-        const response = await api.post<AuthResponseDto>('/auth/register', data);
+        const response = await api.post<AuthResponseDto>('api/auth/register', data);
 
         // Store token in localStorage
         localStorage.setItem('authToken', response.data.token);
@@ -14,7 +14,7 @@ export const authService = {
     },
 
     async login(data: LoginDto): Promise<AuthResponseDto> {
-        const response = await api.post<AuthResponseDto>('/auth/login', data);
+        const response = await api.post<AuthResponseDto>('api/auth/login', data);
 
         // Store token in localStorage
         localStorage.setItem('authToken', response.data.token);
@@ -22,7 +22,7 @@ export const authService = {
     },
 
     getCurrentUser: async () => {
-        const response = await api.get<Profile>('/auth/me');
+        const response = await api.get<Profile>('api/auth/me');
         return response.data;
     },
 
