@@ -7,18 +7,19 @@ namespace backend.Services
 {
     public interface ILLMsService
     {
-        Task<LLMDto> CreateLLMAsync(CreateLLMDto createDto, string token);
-        Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token);
-        Task<LLMDto> GetLLMByIdAsync(string id, string token);
-        Task DeleteLLMAsync(string id, string token);
+        Task<LLMDto> CreateLLMAsync(CreateLLMDto createDto, string token, string refreshToken);
+        Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token, string refreshToken);
+        Task<LLMDto> GetLLMByIdAsync(string id, string token, string refreshToken);
+        Task DeleteLLMAsync(string id, string token, string refreshToken);
     }
 
     public class LLMsService : ILLMsService
     {
-        public async Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token)
+        public async Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token, string refreshToken)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var user = await supabase.Auth.GetUser(token);
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
 
             if (user == null) throw new Exception("Invalid token");
 
@@ -39,10 +40,11 @@ namespace backend.Services
             return llms;
         }
 
-        public async Task<LLMDto> GetLLMByIdAsync(string id, string token)
+        public async Task<LLMDto> GetLLMByIdAsync(string id, string token, string refreshToken)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var user = await supabase.Auth.GetUser(token);
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
 
             if (user == null) throw new Exception("Invalid token");
 
@@ -65,16 +67,22 @@ namespace backend.Services
             };
         }
 
-        public async Task<LLMDto> CreateLLMAsync(CreateLLMDto createLLMDto, string token)
+        public async Task<LLMDto> CreateLLMAsync(CreateLLMDto createLLMDto, string token, string refreshToken)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var user = await supabase.Auth.GetUser(token);
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
 
             if (user == null) throw new Exception("Invalid token");
+
+            // Ensure InferenceConfig is not null
+            if (createLLMDto.InferenceConfig == null)
+                createLLMDto.InferenceConfig = new InferenceConfig();
 
             // Create new LLM, associate with user, and insert into database
             var newLLM = new LLM
             {
+                Id = Guid.NewGuid().ToString(),
                 UserId = user.Id!,
                 Name = createLLMDto.Name,
                 Model = createLLMDto.Model,
@@ -88,17 +96,18 @@ namespace backend.Services
             // Map to DTO
             return new LLMDto
             {
-                Id = createdLLM.Id,
+                Id = createdLLM.Id!,
                 Name = createdLLM.Name,
                 Model = createdLLM.Model,
                 InferenceConfig = JsonSerializer.Deserialize<InferenceConfig>(createdLLM.InferenceConfigJson) ?? new InferenceConfig()
             };
         }
 
-        public async Task DeleteLLMAsync(string id, string token)
+        public async Task DeleteLLMAsync(string id, string token, string refreshToken)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var user = await supabase.Auth.GetUser(token);
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
 
             if (user == null) throw new Exception("Invalid token");
 

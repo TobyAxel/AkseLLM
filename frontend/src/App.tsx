@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import SideBar from "./components/SideBar";
-import type { LLM } from "./domain/llm";
 import LLMCreateModal from "./components/Modals/LLMCreateModal";
 import AuthModal from "./components/Modals/AuthModal";
 import LogoutConfirmModal from "./components/Modals/LogoutConfirmModal";
@@ -9,6 +8,8 @@ import type { Profile } from "./domain/profile";
 import type { LoginDto } from "./domain/DTOs/LoginDto";
 import type { RegisterDto } from "./domain/DTOs/RegisterDto";
 import { authService } from "./services/authService";
+import { llmsService } from "./services/llmsService";
+import type { LLMDto } from "./domain/DTOs/LLMDto";
 
 // Temporary variables for frontend testing
 const availableModelsTemp = ["Gemini 3 Pro", "GPT-5", "Claude 3.7 Sonnet", "Grok 4"]
@@ -18,7 +19,7 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
-  const [llms, setLLMs] = useState<LLM[]>([]);
+  const [llms, setLLMs] = useState<LLMDto[]>([]);
   const [selectedLLMId, setSelectedLLMId] = useState<string | null>(null);
 
   // Modal states
@@ -72,16 +73,17 @@ function App() {
     setLLMCreationModalOpen(false);
   }
 
-  const createLLM = (name: string, model: string) => {
-    // TODO: Update into database
-
-    const newLLM = {
-      id: Date.now().toString(),
+  const createLLM = async (name: string, model: string) => {
+    const newLLM: LLMDto = {
+      id: undefined,
       name,
-      model
+      model,
+      inferenceConfig: null
     }
-
-    setLLMs(prev => [...prev, newLLM])
+    
+    const response = await llmsService.createLLM(newLLM);
+    if (response.message) alert(response.message);
+    setLLMs([...llms, response]);
   }
 
   const handleAuthSubmit = (data: any) => {

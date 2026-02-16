@@ -31,16 +31,18 @@ namespace backend.Controllers
         }
 
         [HttpGet("me")]
-        public async Task<ActionResult<ProfileDto>> GetCurrentUser([FromHeader(Name = "Authorization")] string authorization)
+        public async Task<ActionResult<ProfileDto>> GetCurrentUser(
+            [FromHeader(Name = "Authorization")] string authorization,
+            [FromHeader(Name = "X-Refresh-Token")] string refreshToken)
         {
             string? token = await HandleApiKeyHelper.HandleApiKey(authorization);
-
             if (token == null) return Unauthorized(new { message = "Authorization header is missing or invalid" });
 
-            ProfileDto user = await _authService.GetCurrentUserAsync(token);
+            if (string.IsNullOrEmpty(refreshToken))
+                return BadRequest(new { message = "Refresh token is required" });
 
+            ProfileDto user = await _authService.GetCurrentUserAsync(token, refreshToken);
             if (user == null) return NotFound(new { message = "Invalid token" });
-
             return Ok(user);
         }
     }

@@ -12,7 +12,7 @@ namespace backend.Services
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
         Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
-        Task<ProfileDto> GetCurrentUserAsync(string token);
+        Task<ProfileDto> GetCurrentUserAsync(string token, string refreshToken);
     }
 
     public class AuthService : IAuthService
@@ -52,6 +52,7 @@ namespace backend.Services
             var response = new AuthResponseDto 
             {
                 Token = signInResponse!.AccessToken,
+                RefreshToken = signInResponse.RefreshToken,
                 User = new ProfileDto{
                     Id = signInResponse.User!.Id!,
                     Username = signInResponse.User.UserMetadata["display_name"].ToString()!,
@@ -78,6 +79,7 @@ namespace backend.Services
             var response = new AuthResponseDto 
             {
                 Token = signInResponse!.AccessToken,
+                RefreshToken = signInResponse.RefreshToken,
                 User = new ProfileDto{
                     Id = signInResponse.User!.Id!,
                     Username = signInResponse.User.UserMetadata["display_name"].ToString()!,
@@ -91,10 +93,11 @@ namespace backend.Services
             return response;
         }
 
-        public async Task<ProfileDto> GetCurrentUserAsync(string token)
+        public async Task<ProfileDto> GetCurrentUserAsync(string token, string refreshToken)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var user = await supabase.Auth.GetUser(token);
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
 
             if (user == null) throw new ValidationException("Invalid token");
 
