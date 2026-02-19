@@ -9,14 +9,14 @@ type SideBarProps = {
   loggedIn: boolean;
   userprofile: Profile | null;
   llms: LLMDto[];
-  selectedLLMId: string | null;
-  onSelectLLM: (id: string) => void;
+  selectedLLM: LLMDto | null;
+  onSelectLLM: (llm: LLMDto) => void;
   onCreateClick: () => void;
   onAccountClick: () => void;
-  onLLMSettingClick: () => void;
+  onLLMSettingClick: (llm: LLMDto) => void;
 };
 
-function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
+function SideBar({ loggedIn, userprofile, llms, selectedLLM, onSelectLLM, onCreateClick, onAccountClick, onLLMSettingClick }: SideBarProps) {
   const [isOpen, setIsOpen] = useState(true);
   return (
     <div className={twMerge(clsx(
@@ -64,7 +64,7 @@ function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCr
 
         <ul className="mt-3 space-y-1 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
           {llms.map((llm) => {
-            const isSelected = llm.id === selectedLLMId;
+            const isSelected = llm.id === selectedLLM?.id;
             return (
               <li
                 key={llm.id}
@@ -74,7 +74,7 @@ function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCr
                     ? "bg-neutral-800 shadow-lg shadow-neutral-900/50"
                     : "hover:bg-neutral-800/50"
                 ))}
-                onClick={() => onSelectLLM(llm.id)}
+                onClick={() => onSelectLLM(llm)}
               >
                 {isSelected && (
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-linear-to-b from-neutral-500 to-neutral-700 rounded-r" />
@@ -92,6 +92,7 @@ function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCr
                       ? "visible"
                       : "hidden"
                   ))}
+                  onClick={() => onLLMSettingClick(llm)}
                 >
                   <HiDotsVertical />
                 </button>

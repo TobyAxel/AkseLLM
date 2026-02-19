@@ -1,9 +1,9 @@
-import type { InterferenceConfig } from "../interferenceConfig";
+import type { InferenceConfig } from "../inferenceConfig";
 
 export type LLMDto = {
     id: string;
     name: string;
     model: string;
-    inferenceConfig: InterferenceConfig | null;
+    inferenceConfig: InferenceConfig | null;
     message?: string; // Optional message field for API responses
 };

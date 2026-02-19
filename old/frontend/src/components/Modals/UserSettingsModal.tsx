@@ -12,14 +12,14 @@ type Tab = {
     content?: React.ReactNode;
 };
 
-type UserSettingsModalProps = {
+type ModalProps = {
     isOpen: boolean,
     userprofile: Profile | null;
     onModalClose: () => void;
     onLogout: () => void;
 };
 
-function UserSettingsModal({ isOpen, userprofile, onModalClose, onLogout }: UserSettingsModalProps) {
+function UserSettingsModal({ isOpen, userprofile, onModalClose, onLogout }: ModalProps) {
     const tabs: Tab[] = [
         { id: "general", label: "General", icon: FiSettings, content: <GeneralState userprofile={userprofile}/> },
         { id: "account", label: "Account", icon: FiUser, content: <AccountState userprofile={userprofile}/> },

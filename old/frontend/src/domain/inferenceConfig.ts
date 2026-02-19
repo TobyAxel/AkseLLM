@@ -1,4 +1,4 @@
-export type InterferenceConfig = {
+export type InferenceConfig = {
     temperature: number;
     maxTokens: number;
     topP: number;

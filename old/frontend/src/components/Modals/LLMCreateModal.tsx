@@ -15,6 +15,7 @@ function LLMCreateModal({ isOpen, availableModels, onLLMCreate, onModalClose }: 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (name.trim() && selectedModel) {
+            setName("")
             onLLMCreate(name.trim(), selectedModel);
             onModalClose();
         }

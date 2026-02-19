@@ -7,24 +7,7 @@ export const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-});
-
-// Request interceptor to add auth token
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-
-    if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }  
-
-    if (refreshToken) {
-        config.headers['X-Refresh-Token'] = refreshToken;
-    }
-
-    return config;
-}, (error) => {
-    return Promise.reject(error);
+    withCredentials: true
 });
 
 // Response interceptor to handle errors globally
@@ -35,8 +18,6 @@ api.interceptors.response.use(
             // Handle specific status codes
             if (error.response.status === 401) {
                 // Unauthorized, possibly token expired
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('refreshToken');
                 window.location.reload();
             }
             

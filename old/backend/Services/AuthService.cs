@@ -12,6 +12,7 @@ namespace backend.Services
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
         Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
+        Task<AuthResponseDto> LogoutAsync();
         Task<ProfileDto> GetCurrentUserAsync(string token, string refreshToken);
     }
 
@@ -78,8 +79,6 @@ namespace backend.Services
             // Form response DTO and return
             var response = new AuthResponseDto 
             {
-                Token = signInResponse!.AccessToken,
-                RefreshToken = signInResponse.RefreshToken,
                 User = new ProfileDto{
                     Id = signInResponse.User!.Id!,
                     Username = signInResponse.User.UserMetadata["display_name"].ToString()!,
@@ -90,7 +89,12 @@ namespace backend.Services
                 Message = ""
             };
             
-            return response;
+            return (response);
+        }
+
+        public async Task<AuthResponseDto> LogoutAsync()
+        {
+            var supabase = await SupabaseHelper.GetClientAsync();
         }
 
         public async Task<ProfileDto> GetCurrentUserAsync(string token, string refreshToken)

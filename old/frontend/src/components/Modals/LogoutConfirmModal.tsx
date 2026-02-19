@@ -1,12 +1,12 @@
 import { FiLogOut } from "react-icons/fi"
 
-type logoutConfirmModalProps = {
+type ModalProps = {
     isOpen: boolean,
     onModalClose: () => void;
     logout: () => void;
 }
 
-function LogoutConfirmModal({ isOpen, onModalClose, logout }: logoutConfirmModalProps) {
+function LogoutConfirmModal({ isOpen, onModalClose, logout }: ModalProps) {
 
     if (!isOpen) return null;
 

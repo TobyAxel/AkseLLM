@@ -30,6 +30,13 @@ namespace backend.Controllers
             return Ok(result);
         }
 
+        [HttpPost("logout")]
+        public async Task<ActionResult<AuthResponseDto>> Logout()
+        {
+            AuthResponseDto result = await _authService.LogoutAsync();
+            return Ok(result);
+        }
+
         [HttpGet("me")]
         public async Task<ActionResult<ProfileDto>> GetCurrentUser(
             [FromHeader(Name = "Authorization")] string authorization,
