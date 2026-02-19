@@ -1,7 +1,7 @@
 import type { InterferenceConfig } from "../interferenceConfig";
 
 export type LLMDto = {
-    id: string | undefined;
+    id: string;
     name: string;
     model: string;
     inferenceConfig: InterferenceConfig | null;

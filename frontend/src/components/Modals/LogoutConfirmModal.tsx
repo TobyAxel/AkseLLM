@@ -1,11 +1,15 @@
 import { FiLogOut } from "react-icons/fi"
 
 type logoutConfirmModalProps = {
+    isOpen: boolean,
     onModalClose: () => void;
     logout: () => void;
 }
 
-function LogoutConfirmModal({ onModalClose, logout }: logoutConfirmModalProps) {
+function LogoutConfirmModal({ isOpen, onModalClose, logout }: logoutConfirmModalProps) {
+
+    if (!isOpen) return null;
+
     return (
         <div className="absolute flex justify-center items-center w-full h-full z-50">
             {/* Backdrop */}

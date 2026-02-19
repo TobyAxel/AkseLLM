@@ -23,10 +23,14 @@ function App() {
   const [selectedLLMId, setSelectedLLMId] = useState<string | null>(null);
 
   // Modal states
-  const [llmCreationModalOpen, setLLMCreationModalOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const [userSettingsModalOpen, setUserSettingsModalOpen] = useState(false);
+  const [modalStates, setModalStates] = useState({
+    llmCreationModal: false,
+    authModal: false,
+    logoutModal: false,
+    userSettingsModal: false,
+    llmSettingsModal: false
+  })
+  type ModalKey = keyof typeof modalStates;
 
   // Check authentication status on mount
   useEffect(() => {
@@ -45,7 +49,7 @@ function App() {
             created_at: response.created_at
           });
           setLoggedIn(true);
-        } 
+        }
         catch (error) {
           // Token might be invalid or expired
           handleLogout();
@@ -63,24 +67,18 @@ function App() {
   // Functions
   const handleLLMSelection = (id: string) => {
     setSelectedLLMId(id);
-  };
 
-  const openCreateModal = () => {
-    setLLMCreationModalOpen(true);
-  };
-
-  const closeCreateModal = () => {
-    setLLMCreationModalOpen(false);
+    // Rest of function for fetching chat data etc
   }
 
   const createLLM = async (name: string, model: string) => {
     const newLLM: LLMDto = {
-      id: undefined,
+      id: "",
       name,
       model,
       inferenceConfig: null
     }
-    
+
     const response = await llmsService.createLLM(newLLM);
     if (response.message) alert(response.message);
     setLLMs([...llms, response]);
@@ -134,33 +132,31 @@ function App() {
     }
   }
 
-  const openUserSettingsModal = () => {
-    setUserSettingsModalOpen(true);
-  }
-
-  const closeUserSettingsModal = () => {
-    setUserSettingsModalOpen(false);
-  }
-
-  const openLogoutModal = () => {
-    setUserSettingsModalOpen(false);
-    setLogoutModalOpen(true);
-  }
-
-  const closeLogoutModal = () => {
-    setLogoutModalOpen(false);
-  }
-
   const handleLogout = () => {
     authService.logout();
     setLoggedIn(false);
     setUserProfile(null);
-    setLogoutModalOpen(false);
+    setModalStates(prev => ({ ...prev, logoutModal: false }));
     window.location.reload();
   }
 
+  const handleModals = (modal: ModalKey, state: boolean) => {
+    setModalStates(prev => {
+      const updated = {
+        ...prev,
+        [modal]: state
+      };
+
+      if (modal === "logoutModal" && state) {
+        updated.userSettingsModal = false;
+      }
+
+      return updated;
+    });
+  }
+
   useEffect(() => {
-    setAuthModalOpen(!loggedIn)
+    setModalStates(prev => ({ ...prev, authModal: !loggedIn }))
   }, [loggedIn])
 
   if (loading) {
@@ -169,11 +165,30 @@ function App() {
 
   return (
     <div className="flex">
-      {llmCreationModalOpen ? <LLMCreateModal availableModels={availableModelsTemp} onLLMCreate={createLLM} onModalClose={closeCreateModal} /> : null}
-      {authModalOpen ? <AuthModal onSubmit={handleAuthSubmit} /> : null}
-      {logoutModalOpen ? <LogoutConfirmModal onModalClose={closeLogoutModal} logout={handleLogout} /> : null}
-      {userSettingsModalOpen ? (<UserSettingsModal userprofile={userProfile} onModalClose={closeUserSettingsModal} onLogout={openLogoutModal} />) : null}
-      <SideBar loggedIn={loggedIn} userprofile={userProfile} llms={llms} selectedLLMId={selectedLLMId} onSelectLLM={handleLLMSelection} onCreateClick={openCreateModal} onAccountClick={openUserSettingsModal} />
+      <LLMCreateModal isOpen={modalStates.llmCreationModal} availableModels={availableModelsTemp}
+        onLLMCreate={createLLM}
+        onModalClose={() => handleModals("llmCreationModal", false)}
+      />
+
+      <AuthModal isOpen={modalStates.authModal}
+        onSubmit={handleAuthSubmit}
+      />
+
+      <LogoutConfirmModal isOpen={modalStates.logoutModal}
+        onModalClose={() => handleModals("logoutModal", false)}
+        logout={handleLogout}
+      />
+
+      <UserSettingsModal isOpen={modalStates.userSettingsModal} userprofile={userProfile}
+        onModalClose={() => handleModals("userSettingsModal", false)}
+        onLogout={() => handleModals("logoutModal", true)}
+      />
+
+      <SideBar loggedIn={loggedIn} userprofile={userProfile} llms={llms} selectedLLMId={selectedLLMId}
+        onSelectLLM={handleLLMSelection}
+        onCreateClick={() => handleModals("llmCreationModal", true)}
+        onAccountClick={() => handleModals("userSettingsModal", true)}
+        onLLMSettingClick={() => handleModals("llmSettingsModal", true)} />
     </div>
   )
 }

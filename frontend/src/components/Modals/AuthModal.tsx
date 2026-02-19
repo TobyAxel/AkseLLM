@@ -10,10 +10,11 @@ type AuthData = {
 };
 
 type ModalProps = {
+    isOpen: boolean,
     onSubmit: (data: AuthData) => void;
 };
 
-function AuthModal({ onSubmit }: ModalProps) {
+function AuthModal({ isOpen, onSubmit }: ModalProps) {
     const [modalState, setModalState] = useState<'login' | 'register'>("login");
 
     const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -31,6 +32,8 @@ function AuthModal({ onSubmit }: ModalProps) {
     function changeState() {
         setModalState(modalState === "login" ? "register" : "login");
     }
+
+    if (!isOpen) return null;
 
     return (
         <div className="absolute flex justify-center items-center w-full h-full z-50">

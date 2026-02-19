@@ -13,12 +13,13 @@ type Tab = {
 };
 
 type UserSettingsModalProps = {
+    isOpen: boolean,
     userprofile: Profile | null;
     onModalClose: () => void;
     onLogout: () => void;
 };
 
-function UserSettingsModal({ userprofile, onModalClose, onLogout }: UserSettingsModalProps) {
+function UserSettingsModal({ isOpen, userprofile, onModalClose, onLogout }: UserSettingsModalProps) {
     const tabs: Tab[] = [
         { id: "general", label: "General", icon: FiSettings, content: <GeneralState userprofile={userprofile}/> },
         { id: "account", label: "Account", icon: FiUser, content: <AccountState userprofile={userprofile}/> },
@@ -26,6 +27,8 @@ function UserSettingsModal({ userprofile, onModalClose, onLogout }: UserSettings
     ];
 
     const [activeTab, setActiveTab] = useState<Tab>(tabs[0]);
+
+    if (!isOpen) return null;
 
     return (
         <div className="absolute flex justify-center items-center w-full h-full z-50">

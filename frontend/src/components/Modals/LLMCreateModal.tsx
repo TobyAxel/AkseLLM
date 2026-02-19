@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { FiType, FiCpu } from 'react-icons/fi';
 
 type ModalProps = {
+    isOpen: boolean,
     availableModels: string[];
     onLLMCreate: (name: string, model: string) => void;
     onModalClose: () => void;
 };
 
-function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalProps) {
+function LLMCreateModal({ isOpen, availableModels, onLLMCreate, onModalClose }: ModalProps) {
     const [name, setName] = useState('');
     const [selectedModel, setSelectedModel] = useState(availableModels[0] || '');
 
@@ -18,6 +19,8 @@ function LLMCreateModal({ availableModels, onLLMCreate, onModalClose }: ModalPro
             onModalClose();
         }
     };
+
+    if (!isOpen) return null;
 
     return (
         <div className="absolute flex justify-center items-center w-full h-full z-50">

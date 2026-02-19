@@ -1,17 +1,19 @@
 import { twMerge } from "tailwind-merge";
 import clsx from "clsx";
 import { useState } from "react";
-import type { LLM } from "../domain/llm";
 import type { Profile } from "../domain/profile";
+import type { LLMDto } from "../domain/DTOs/LLMDto";
+import { HiDotsVertical } from "react-icons/hi";
 
 type SideBarProps = {
   loggedIn: boolean;
   userprofile: Profile | null;
-  llms: LLM[];
+  llms: LLMDto[];
   selectedLLMId: string | null;
   onSelectLLM: (id: string) => void;
   onCreateClick: () => void;
   onAccountClick: () => void;
+  onLLMSettingClick: () => void;
 };
 
 function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCreateClick, onAccountClick }: SideBarProps) {
@@ -83,6 +85,16 @@ function SideBar({ loggedIn, userprofile, llms, selectedLLMId, onSelectLLM, onCr
                 ))}>
                   {llm.name}
                 </span>
+                <button
+                  className={twMerge(clsx(
+                    "rounded-lg p-1.5 absolute right-0 mr-1 cursor-pointer duration-200 hover:bg-neutral-700",
+                    isSelected
+                      ? "visible"
+                      : "hidden"
+                  ))}
+                >
+                  <HiDotsVertical />
+                </button>
               </li>
             );
           })}
