@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using backend.Models.Domain;
+using backend.Models.Common;
 
 namespace backend.Models.DTOs.LLM
 {

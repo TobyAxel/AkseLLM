@@ -1,4 +1,4 @@
-namespace backend.Models.Domain
+namespace backend.Models.Common
 {
     public class UserProfile
     {

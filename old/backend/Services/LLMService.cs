@@ -5,7 +5,7 @@ using backend.Models.SupaBaseModels;
 
 namespace backend.Services
 {
-    public interface ILLMsService
+    public interface ILLMService
     {
         Task<LLMDto> CreateLLMAsync(CreateLLMDto createDto, string token, string refreshToken);
         Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token, string refreshToken);
@@ -13,7 +13,7 @@ namespace backend.Services
         Task DeleteLLMAsync(string id, string token, string refreshToken);
     }
 
-    public class LLMsService : ILLMsService
+    public class LLMService : ILLMService
     {
         public async Task<IEnumerable<LLMDto>> GetAllLLMsAsync(string token, string refreshToken)
         {

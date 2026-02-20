@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using backend.Validation;
 
-namespace backend.Models.Domain
+namespace backend.Models.Common
 {
     public class LLMConfig
     {
