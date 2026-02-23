@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Supabase.Postgrest.Exceptions;
 using Supabase.Gotrue.Exceptions;
+using backend.Exceptions;
 using System.Text.Json;
 
 namespace backend.Filters;
 
 public class ExceptionFilter : IExceptionFilter
 {
-    private readonly ILogger<ExceptionFilter> _logger;
+    private readonly ILogger _logger;
 
     public ExceptionFilter(ILogger<ExceptionFilter> logger)
     {
@@ -20,7 +21,17 @@ public class ExceptionFilter : IExceptionFilter
         // Handle validation exceptions
         if (context.Exception is Exceptions.ValidationException)
         {
+            // Business logic validation errors: input was understood but invalid
             context.Result = new BadRequestObjectResult(new { message = context.Exception.Message });
+            context.ExceptionHandled = true;
+            return;
+        }
+
+        // Handle not found exceptions
+        if (context.Exception is NotFoundException)
+        {
+            // Resource does not exist for this user (e.g., LLM not found)
+            context.Result = new NotFoundObjectResult(new { message = context.Exception.Message });
             context.ExceptionHandled = true;
             return;
         }
@@ -28,17 +39,29 @@ public class ExceptionFilter : IExceptionFilter
         // Handle Supabase exceptions (Gotrue and Postgrest)
         if (context.Exception is GotrueException or PostgrestException)
         {
+            // Extract meaningful error message from Supabase JSON response
             var errorMessage = ParseSupabaseError(context.Exception.Message);
             context.Result = new BadRequestObjectResult(new { message = errorMessage });
             context.ExceptionHandled = true;
             return;
         }
 
-        // Log and handle any other unhandled exceptions
-        _logger.LogError(context.Exception, "An error occurred: {Message}", context.Exception.Message);
+        // Handle Unauthorization exceptions
+        if (context.Exception is UnauthorizedAccessException)
+        {
+            // Log warning for security audit trail
+            _logger.LogWarning("Unauthorized access attempt: {Message}", context.Exception.Message);
+            context.Result = new UnauthorizedObjectResult(new { message = "Unauthorized. Please authenticate and try again." });
+            context.ExceptionHandled = true;
+            return;
+        }
 
-        var message = context.Exception.Message;
-        context.Result = new BadRequestObjectResult(new { message });
+        // Log and handle any other unhandled exceptions
+        _logger.LogError(context.Exception, "An unhandled error occurred: {Message}", context.Exception.Message);
+        context.Result = new ObjectResult(new { message = "An unexpected error occurred. Please try again later." })
+        {
+            StatusCode = StatusCodes.Status500InternalServerError
+        };
         context.ExceptionHandled = true;
     }
 
@@ -51,6 +74,7 @@ public class ExceptionFilter : IExceptionFilter
         }
         catch
         {
+            // Fallback to raw JSON if parsing fails
             return errorJson;
         }
     }

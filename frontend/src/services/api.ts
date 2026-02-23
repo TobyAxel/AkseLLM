@@ -1,44 +1,21 @@
-import axios from 'axios';
+const BASE_URL = import.meta.env.VITE_API_URL ?? "https://localhost:7001";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5046';
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+    const res = await fetch(`${BASE_URL}${path}`, {
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // required for HttpOnly cookie auth
+        ...options,
+    });
 
-export const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
-
-// Request interceptor to add auth token
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }   
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
-
-// Response interceptor to handle errors globally
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response) {
-            // Handle specific status codes
-            if (error.response.status === 401) {
-                // Unauthorized, possibly token expired
-                localStorage.removeItem('authToken');
-                window.location.reload();
-            }
-            
-            // Extract error message and attach the message to the error object for easier handling in components
-            const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-            error.message = errorMessage;
-        } else {
-            error.message = 'Network error. Please check your connection.';
-        }
-
-        return Promise.reject(error);
+    if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || `Request failed with status ${res.status}`);
     }
-);
+
+    // 204 No Content: don't try to parse JSON
+    if (res.status === 204) return undefined as T;
+
+    return res.json() as Promise<T>;
+}
+
+export default request;

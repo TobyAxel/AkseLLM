@@ -1,32 +1,42 @@
-import type { AuthResponseDto } from "../domain/DTOs/AuthResponseDto";
-import type { LoginDto } from "../domain/DTOs/LoginDto";
-import type { RegisterDto } from "../domain/DTOs/RegisterDto";
-import type { Profile } from "../domain/profile";
-import { api } from "./api";
+import request from "./api";
+import type { UserProfile } from "../domain";
+
+type LoginDto = {
+    email: string;
+    password: string;
+};
+
+type RegisterDto = {
+    username: string;
+    email: string;
+    password: string;
+};
+
+type AuthResponseDto = {
+    user: UserProfile;
+    message?: string;
+};
 
 export const authService = {
-    async register(data: RegisterDto): Promise<AuthResponseDto> {
-        const response = await api.post<AuthResponseDto>('/auth/register', data);
+    // POST /api/auth/register
+    register: (data: RegisterDto) =>
+        request<AuthResponseDto>("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
 
-        // Store token in localStorage
-        localStorage.setItem('authToken', response.data.token);
-        return response.data;
-    },
+    // POST /api/auth/login
+    login: (data: LoginDto) =>
+        request<AuthResponseDto>("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify(data),
+        }),
 
-    async login(data: LoginDto): Promise<AuthResponseDto> {
-        const response = await api.post<AuthResponseDto>('/auth/login', data);
+    // GET /api/auth/me
+    me: () =>
+        request<AuthResponseDto>("/api/auth/me"),
 
-        // Store token in localStorage
-        localStorage.setItem('authToken', response.data.token);
-        return response.data;
-    },
-
-    getCurrentUser: async () => {
-        const response = await api.get<Profile>('/auth/me');
-        return response.data;
-    },
-
-    logout() {
-        localStorage.removeItem('authToken');
-    }
+    // POST /api/auth/logout
+    logout: () =>
+        request<void>("/api/auth/logout", { method: "POST" }),
 };

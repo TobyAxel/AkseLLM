@@ -1,13 +1,12 @@
-using System.Security.Claims;
-using backend.Models.DTOs;
+using backend.Helpers;
+using backend.Models.DTOs.Auth;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
-using Supabase.Postgrest.Exceptions;
 
 namespace backend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -20,34 +19,46 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto registerDto)
         {
-            AuthResponseDto result = await _authService.RegisterAsync(registerDto);
-            return Ok(result);
+            var result = await _authService.RegisterAsync(registerDto);
+
+            // Store tokens in HttpOnly cookies so they're never accessible via JS
+            Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+
+            return Ok(result.user);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
         {
-            AuthResponseDto result = await _authService.LoginAsync(loginDto);
-            return Ok(result);
+            var result = await _authService.LoginAsync(loginDto);
+
+            // Store tokens in HttpOnly cookies so they're never accessible via JS
+            Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+
+            return Ok(result.user);
         }
 
         [HttpGet("me")]
-        public async Task<ActionResult<ProfileDto>> GetCurrentUser([FromHeader(Name = "Authorization")] string authorization)
+        public async Task<ActionResult<AuthResponseDto>> GetCurrentUser()
         {
-            if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
-            {
-                return Unauthorized(new { message = "Authorization header is missing or invalid" });
-            }
+            var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
+            AuthResponseDto result = await _authService.GetCurrentUserAsync(token, refreshToken);
+            return Ok(result);
+        }
 
-            string token = authorization.Substring("Bearer ".Length).Trim();
-            ProfileDto user = await _authService.GetCurrentUserAsync(token);
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
+            await _authService.LogoutAsync(token, refreshToken);
 
-            if (user == null)
-            {
-                return NotFound(new { message = "Invalid token" });
-            }
+            // Clear cookies from the client after invalidating the session server-side
+            Response.Cookies.Delete("token");
+            Response.Cookies.Delete("refreshToken");
 
-            return Ok(user);
+            return NoContent();
         }
     }
 }
