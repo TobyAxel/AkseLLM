@@ -1,6 +1,7 @@
 using backend.Filters;
 using backend.Services;
 using DotNetEnv;
+using System.Text.Json.Serialization;
 
 Env.Load();
 
@@ -23,6 +24,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ExceptionFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
 // Register services

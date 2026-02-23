@@ -32,7 +32,7 @@ function LLMCreateModal() {
                     stream: true,
                 },
             });
-            addLLM(llm);
+            addLLM(llm[0]);
             setName("");
             closeModal();
         } catch (e) {

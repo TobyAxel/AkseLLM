@@ -24,21 +24,21 @@ export const llmService = {
 
     // GET /api/llm/:id
     getById: (id: number) =>
-        request<LLMModel>(`/api/llm/${id}`),
+        request<LLMResponseDto>(`/api/llm/${id}`).then((res) => res.llMs),
 
     // POST /api/llm
     create: (data: CreateLLMDto) =>
-        request<LLMModel>("/api/llm", {
+        request<LLMResponseDto>("/api/llm", {
             method: "POST",
             body: JSON.stringify(data),
-        }),
+        }).then((res) => res.llMs),
 
     // PUT /api/llm
     update: (data: UpdateLLMDto) =>
-        request<LLMModel>("/api/llm", {
+        request<LLMResponseDto>("/api/llm", {
             method: "PUT",
             body: JSON.stringify(data),
-        }),
+        }).then((res) => res.llMs),
 
     // DELETE /api/llm/:id
     delete: (id: number) =>
