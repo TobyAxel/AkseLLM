@@ -5,10 +5,13 @@ import RegisterView from "./views/RegisterView";
 import { useModalStore } from "../../../stores/useModalStore";
 import { useUserStore } from "../../../stores/useUserStore";
 import { authService } from "../../../services/authService";
+import { llmService } from "../../../services";
+import { useLLMStore } from "../../../stores/useLLMStore";
 
 function AuthModal() {
     const { activeModal, closeModal } = useModalStore();
     const { setProfile } = useUserStore();
+    const { setLLMs } = useLLMStore();
     const [view, setView] = useState<"login" | "register">("login");
     const [error, setError] = useState<string | null>(null);
 
@@ -17,8 +20,11 @@ function AuthModal() {
             setError(null);
             const res = await authService.login(data);
             setProfile(res.user);
+            const llms = await llmService.getAll();
+            setLLMs(llms);
             closeModal();
         } catch (e) {
+            console.log(e)
             setError(e instanceof Error ? e.message : "Login failed");
         }
     };

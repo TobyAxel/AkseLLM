@@ -22,7 +22,7 @@ function App() {
                 setLLMs(llms);
             })
             .catch(() => {
-                // No active session = show auth modal
+                // No active session, show auth modal
                 openModal("auth");
             })
             .finally(() => {
