@@ -21,6 +21,7 @@ namespace backend.Controllers
         {
             var result = await _authService.RegisterAsync(registerDto);
 
+            // Store tokens in HttpOnly cookies so they're never accessible via JS
             Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
             Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
 
@@ -32,6 +33,7 @@ namespace backend.Controllers
         {
             var result = await _authService.LoginAsync(loginDto);
 
+            // Store tokens in HttpOnly cookies so they're never accessible via JS
             Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
             Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
 
@@ -43,7 +45,6 @@ namespace backend.Controllers
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
             AuthResponseDto result = await _authService.GetCurrentUserAsync(token, refreshToken);
-
             return Ok(result);
         }
 
@@ -51,9 +52,9 @@ namespace backend.Controllers
         public async Task<IActionResult> Logout()
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
-
             await _authService.LogoutAsync(token, refreshToken);
 
+            // Clear cookies from the client after invalidating the session server-side
             Response.Cookies.Delete("token");
             Response.Cookies.Delete("refreshToken");
 
