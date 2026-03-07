@@ -1,11 +1,12 @@
 using backend.Filters;
 using backend.Services;
-using DotNetEnv;
 using System.Text.Json.Serialization;
 
-Env.Load();
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Load Supabase credentials from configuration into environment variables for the Supabase client to access
+Environment.SetEnvironmentVariable("SUPABASE_URL", builder.Configuration["Supabase:Url"]);
+Environment.SetEnvironmentVariable("SUPABASE_PUBLIC_KEY", builder.Configuration["Supabase:PublicKey"]);
 
 // Configure CORS
 const string corsPolicy = "AllowFrontend";
@@ -46,7 +47,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

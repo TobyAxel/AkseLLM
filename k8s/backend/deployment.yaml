@@ -25,3 +25,13 @@ spec:
               value: "http://0.0.0.0:8000"
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
+            - name: Supabase__Url
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SupabaseUrl
+            - name: Supabase__PublicKey
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secrets
+                  key: SupabasePublicKey
