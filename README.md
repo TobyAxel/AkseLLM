@@ -1,3 +1,5 @@
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-red.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 # AkseLLM
 
 A web application for managing and deploying custom Large Language Models on Kubernetes.
@@ -83,4 +85,4 @@ kubectl apply -f k8s/ingress.yaml
 3. Enforce resource limits and security on deployed workloads.
 
 ## License
-This project is licensed under the [LICENSE](LICENSE) file.
+This project is licensed under a CC BY-NC-SA 4.0 license. See the [LICENSE](LICENSE) file for full details.
