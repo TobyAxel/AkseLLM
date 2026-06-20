@@ -43,4 +43,6 @@ export const llmService = {
     // DELETE /api/llm/:id
     delete: (id: number) =>
         request<void>(`/api/llm/${id}`, { method: "DELETE" }),
+
+    // POST /api/llm/message
 };

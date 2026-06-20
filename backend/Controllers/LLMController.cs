@@ -1,4 +1,5 @@
 using backend.Helpers;
+using backend.Models.Common;
 using backend.Models.DTOs.LLM;
 using backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,14 @@ namespace backend.Controllers
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
             await _llmService.DeleteLLMAsync(id, token, refreshToken);
             return NoContent();
+        }
+
+        [HttpPost("{id}")]
+        public async Task<ActionResult<LLMResponseDto>> SendMessageToLLM([FromBody] Message message, int id)
+        {
+            var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
+            var result = await _llmService.SendMessageToLLMAsync(id, message, token, refreshToken);
+            return Ok(result);
         }
     }
 }

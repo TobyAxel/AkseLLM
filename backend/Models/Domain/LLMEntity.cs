@@ -1,3 +1,4 @@
+using backend.Models.Common;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
@@ -16,10 +17,10 @@ namespace backend.Models.Domain
         public string? Name { get; set; }
 
         [Column("llm_config")]
-        public string? LLMConfig { get; set; }
+        public LLMConfig? LLMConfig { get; set; }
 
         [Column("chat_history")]
-        public string? ChatHistory { get; set; }
+        public List<Message>? ChatHistory { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

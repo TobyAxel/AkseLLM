@@ -1,16 +1,15 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
-type ModalSize = "sm" | "md" | "lg";
 
 type ModalProps = {
     isOpen: boolean;
     onClose?: () => void;
-    size?: ModalSize;
+    size?: "sm" | "md" | "lg";
     children: React.ReactNode;
 };
 
-const sizeClasses: Record<ModalSize, string> = {
+const sizes = {
     sm: "max-w-sm",
     md: "max-w-md",
     lg: "max-w-2xl",
@@ -36,7 +35,7 @@ function Modal({ isOpen, onClose, size = "md", children }: ModalProps) {
 
             {/* Modal container */}
             <div
-                className={`relative bg-linear-to-b from-neutral-800 via-neutral-800 to-neutral-900 w-full ${sizeClasses[size]} mx-4 rounded-xl shadow-2xl border border-neutral-700/50 overflow-hidden`}
+                className={`relative bg-linear-to-b from-neutral-800 via-neutral-800 to-neutral-900 w-full ${sizes[size]} mx-4 rounded-xl shadow-2xl border border-neutral-700/50 overflow-hidden`}
             >
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-linear-to-br from-neutral-700/10 to-transparent pointer-events-none" />

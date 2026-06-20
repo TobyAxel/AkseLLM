@@ -6,6 +6,7 @@ import { useModalStore } from "./stores/useModalStore";
 import { useLLMStore } from "./stores/useLLMStore";
 import { authService } from "./services/authService";
 import { llmService } from "./services/llmService";
+import ChatPanel from "./components/ChatPanel";
 
 function App() {
     const { setProfile } = useUserStore();
@@ -35,6 +36,7 @@ function App() {
     return (
         <div className="flex">
             <SideBar />
+            <ChatPanel />
             <ModalRenderer />
         </div>
     );

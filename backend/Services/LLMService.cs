@@ -17,6 +17,7 @@ namespace backend.Services
         Task<LLMResponseDto> CreateLLMAsync(CreateLLMDto createLLMDto, string token, string refreshToken);
         Task<LLMResponseDto> UpdateLLMAsync(UpdateLLMDto updateLLMDto, string token, string refreshToken);
         Task DeleteLLMAsync(int id, string token, string refreshToken);
+        Task<LLMResponseDto> SendMessageToLLMAsync(int id, Message message, string token, string refreshToken);
     }
 
     public class LLMService : ILLMService
@@ -39,16 +40,12 @@ namespace backend.Services
             {
                 LLMs = result.Models.Select(llm =>
                 {
-                    // Config and chat history are stored as JSON strings in the DB, deserialize them back
-                    var config = JsonSerializer.Deserialize<LLMConfig>(llm.LLMConfig!);
-                    var chatHistory = JsonSerializer.Deserialize<List<Message>>(llm.ChatHistory!);
-
                     return new LLMModel
                     {
                         Id = llm!.Id!,
                         Name = llm.Name!,
-                        Config = config!,
-                        ChatHistory = chatHistory,
+                        Config = llm.LLMConfig!,
+                        ChatHistory = llm.ChatHistory,
                         CreatedAt = llm.CreatedAt
                     };
                 })
@@ -75,9 +72,6 @@ namespace backend.Services
 
             if (llm == null) throw new NotFoundException("LLM not found");
 
-            var config = JsonSerializer.Deserialize<LLMConfig>(llm.LLMConfig!);
-            var chatHistory = JsonSerializer.Deserialize<List<Message>>(llm.ChatHistory!);
-
             var response = new LLMResponseDto
             {
                 LLMs = new List<LLMModel>
@@ -86,8 +80,8 @@ namespace backend.Services
                     {
                         Id = llm.Id!,
                         Name = llm.Name!,
-                        Config = config!,
-                        ChatHistory = chatHistory,
+                        Config = llm.LLMConfig!,
+                        ChatHistory = llm.ChatHistory,
                         CreatedAt = llm.CreatedAt
                     }
                 }
@@ -109,8 +103,8 @@ namespace backend.Services
             {
                 UserId = user.Id,
                 Name = createLLMDto.Name,
-                LLMConfig = JsonSerializer.Serialize(createLLMDto.Config),
-                ChatHistory = JsonSerializer.Serialize(new List<Message>()) // Start with empty chat history
+                LLMConfig = createLLMDto.Config,
+                ChatHistory = new List<Message>() // Start with empty chat history
             };
 
             var result = await supabase.From<LLMEntity>().Insert(newLLM);
@@ -118,9 +112,6 @@ namespace backend.Services
 
             if (llm == null)
                 throw new Exception("Failed to create LLM");
-
-            var config = JsonSerializer.Deserialize<LLMConfig>(llm.LLMConfig!);
-            var chatHistory = JsonSerializer.Deserialize<List<Message>>(llm.ChatHistory!);
 
             var response = new LLMResponseDto
             {
@@ -130,8 +121,8 @@ namespace backend.Services
                     {
                         Id = llm!.Id!,
                         Name = llm.Name!,
-                        Config = config!,
-                        ChatHistory = chatHistory,
+                        Config = llm.LLMConfig!,
+                        ChatHistory = llm.ChatHistory,
                         CreatedAt = llm.CreatedAt
                     }
                 }
@@ -165,16 +156,13 @@ namespace backend.Services
                 llmEntity.Name = updateLLMDto.Name;
 
             if (updateLLMDto.Config != null)
-                llmEntity.LLMConfig = JsonSerializer.Serialize(updateLLMDto.Config);
+                llmEntity.LLMConfig = updateLLMDto.Config;
 
             var result = await supabase.From<LLMEntity>().Update(llmEntity);
             var llm = result.Models.FirstOrDefault();
 
             if (llm == null)
                 throw new Exception("Failed to update LLM");
-
-            var config = JsonSerializer.Deserialize<LLMConfig>(llm.LLMConfig!);
-            var chatHistory = JsonSerializer.Deserialize<List<Message>>(llm.ChatHistory!);
 
             var response = new LLMResponseDto
             {
@@ -184,8 +172,8 @@ namespace backend.Services
                     {
                         Id = llm!.Id!,
                         Name = llm.Name!,
-                        Config = config!,
-                        ChatHistory = chatHistory,
+                        Config = llm.LLMConfig!,
+                        ChatHistory = llm.ChatHistory,
                         CreatedAt = llm.CreatedAt
                     }
                 }
@@ -207,6 +195,56 @@ namespace backend.Services
             await supabase.From<LLMEntity>()
                 .Where(x => x.UserId == user.Id && x.Id == id)
                 .Delete();
+        }
+
+        public async Task<LLMResponseDto> SendMessageToLLMAsync(int id, Message message, string token, string refreshToken)
+        {
+            if (message == null || message.Content == "")
+                throw new MissingFieldException("No message given");
+
+            var supabase = await SupabaseHelper.GetClientAsync();
+            await supabase.Auth.SetSession(token, refreshToken);
+            var user = supabase.Auth.CurrentUser;
+
+            if (user == null)
+                throw new UnauthorizedAccessException("Invalid or expired session");
+
+            // Filter by both user ID and LLM ID to prevent users accessing each other's LLMs
+            var result = await supabase.From<LLMEntity>()
+                .Where(x => x.UserId == user.Id && x.Id == id)
+                .Get();
+
+            var llm = result.Models.FirstOrDefault();
+
+            if (llm == null) throw new NotFoundException("LLM not found");
+
+            // Add users message to the chat history
+            llm.ChatHistory!.Add(message);
+
+            // Check if given model is running
+            // If not, run up model first
+
+            // Send chat history & config to model
+            // Wait for resposne
+
+            // Add response to chatHistory and update llm
+
+            var response = new LLMResponseDto
+            {
+                LLMs = new List<LLMModel>
+                {
+                    new LLMModel
+                    {
+                        Id = llm!.Id!,
+                        Name = llm.Name!,
+                        Config = llm.LLMConfig!,
+                        ChatHistory = llm.ChatHistory,
+                        CreatedAt = llm.CreatedAt
+                    }
+                }
+            };
+
+            return response;
         }
     }
 }

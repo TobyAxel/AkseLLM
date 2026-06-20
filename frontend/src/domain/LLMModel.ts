@@ -6,5 +6,5 @@ export type LLMModel = {
     name: string;
     config: LLMConfig;
     chatHistory?: Message[];
-    createdAt: string; // ISO date string from JSON
+    createdAt: string;
 };
