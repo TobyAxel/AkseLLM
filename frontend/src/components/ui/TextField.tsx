@@ -1,11 +1,45 @@
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
+import { useEffect, useState } from "react";
+import { llmService } from "../../services";
+import { useLLMStore } from "../../stores/useLLMStore";
+import type { Message } from "../../domain";
 import { FiSend } from "react-icons/fi";
-import { useState } from "react";
+import { useToastStore } from "../../stores/useToastStore";
 
 function TextField() {
-    const [message, setMessage] = useState("");
-    
+    const [input, setInput] = useState("");
+    const [isSendingMessage, setIsSendingMessage] = useState(false);
+    const { selectedLLM, addMessage, removeLastMessage } = useLLMStore();
+    const { showError } = useToastStore();
+
+    useEffect(() => {
+        setInput("")
+    }, [selectedLLM]);
+
+    const sendMessage = async () => {
+        const storedInput = input;
+        setIsSendingMessage(true);
+        try {
+            const userMessage: Message = {
+                role: "user",
+                content: input,
+                createdAt: new Date().toISOString()
+            };
+            
+            setInput("")
+            addMessage(userMessage)
+            const message = await llmService.sendMessage(selectedLLM!.id, userMessage);
+            addMessage(message)
+            setIsSendingMessage(false);
+
+        } catch (e) {
+            showError("Failed to send message.");
+            removeLastMessage();
+            setInput(storedInput)
+            setIsSendingMessage(false);
+        }
+    }
 
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
@@ -22,13 +56,14 @@ function TextField() {
                 <input
                     className="flex-1 bg-transparent outline-none text-white placeholder:text-neutral-500"
                     placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                 />
 
-                <button 
-                    className={twMerge(clsx("text-neutral-300 transition cursor-pointer hover:text-white"))}
-                    disabled={!message.trim()}
+                <button
+                    className="text-neutral-300 transition cursor-pointer hover:text-white"
+                    disabled={!input.trim() || isSendingMessage}
+                    onClick={sendMessage}
                 >
                     <FiSend size={18} />
                 </button>

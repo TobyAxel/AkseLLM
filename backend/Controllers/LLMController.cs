@@ -41,11 +41,11 @@ namespace backend.Controllers
             return Ok(result);
         }
 
-        [HttpPut]
-        public async Task<ActionResult<LLMResponseDto>> UpdateLLM([FromBody] UpdateLLMDto updateLLMDto)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<LLMResponseDto>> UpdateLLM(int id, [FromBody] UpdateLLMDto updateLLMDto)
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
-            var result = await _llmService.UpdateLLMAsync(updateLLMDto, token, refreshToken);
+            var result = await _llmService.UpdateLLMAsync(id, updateLLMDto, token, refreshToken);
             return Ok(result);
         }
 
@@ -57,8 +57,16 @@ namespace backend.Controllers
             return NoContent();
         }
 
-        [HttpPost("{id}")]
-        public async Task<ActionResult<LLMResponseDto>> SendMessageToLLM([FromBody] Message message, int id)
+        [HttpGet("{id}/chat")]
+        public async Task<ActionResult<GetMessagesDto>> GetLLMMessages(int id)
+        {
+            var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
+            var result = await _llmService.GetLLMMessagesAsync(id, token, refreshToken);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/chat")]
+        public async Task<ActionResult<GetMessagesDto>> SendMessageToLLM(int id, [FromBody] Message message)
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
             var result = await _llmService.SendMessageToLLMAsync(id, message, token, refreshToken);

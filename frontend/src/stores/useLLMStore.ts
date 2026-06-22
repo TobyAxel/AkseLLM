@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import type { LLMModel } from "../domain";
+import type { LLMModel, Message } from "../domain";
 
 type LLMStore = {
     llms: LLMModel[];
+    messages: Message[];
     selectedLLM: LLMModel | null;
 
     setLLMs: (llms: LLMModel[]) => void;
@@ -10,10 +11,15 @@ type LLMStore = {
     removeLLM: (id: number) => void;
     updateLLM: (llm: LLMModel) => void;
     selectLLM: (llm: LLMModel | null) => void;
+
+    setMessages: (messages: Message[]) => void;
+    addMessage: (messages: Message) => void;
+    removeLastMessage: () => void;
 };
 
 export const useLLMStore = create<LLMStore>((set) => ({
     llms: [],
+    messages: [],
     selectedLLM: null,
 
     setLLMs: (llms) => set({ llms }),
@@ -27,4 +33,10 @@ export const useLLMStore = create<LLMStore>((set) => ({
         selectedLLM: state.selectedLLM?.id === llm.id ? llm : state.selectedLLM,
     })),
     selectLLM: (llm) => set({ selectedLLM: llm }),
+
+    setMessages: (messages) => set({ messages }),
+    addMessage: (messages) => set((state) => ({ messages: [...state.messages, messages] })),
+    removeLastMessage: () => set((state) => ({
+        messages: state.messages.slice(0, -1)
+    })),
 }));

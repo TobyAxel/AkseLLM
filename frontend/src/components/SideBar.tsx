@@ -96,11 +96,12 @@ function SideBar() {
                 <button
                     className={twMerge(clsx(
                         "mt-4 w-full h-9 rounded-lg border-2 border-dashed border-neutral-700 transition-all duration-200 flex items-center justify-center group",
-                        loggedIn ? "cursor-pointer hover:border-neutral-600 hover:bg-neutral-800/30" : "opacity-50 cursor-not-allowed"
+                        loggedIn && llms.length < 15 ? "cursor-pointer hover:border-neutral-600 hover:bg-neutral-800/30" : "opacity-50 cursor-not-allowed"
                     ))}
                     onClick={() => openModal("llmCreate")}
                     aria-label="Create new LLM"
-                    disabled={!loggedIn}
+                    title={llms.length < 15 ? "" : "Maximum number of llms reached"}
+                    disabled={!loggedIn || llms.length >= 15}
                 >
                     <span className={twMerge(clsx("text-neutral-500 font-bold text-lg", loggedIn && "group-hover:text-neutral-300"))}>+</span>
                     <span className={twMerge(clsx("ml-2 text-sm text-neutral-500 font-medium", loggedIn && "group-hover:text-neutral-300"))}>New LLM</span>

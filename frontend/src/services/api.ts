@@ -8,9 +8,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     });
 
     if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    throw new Error(body?.message || `Request failed with status ${res.status}`);
-}
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message || `Request failed with status ${res.status}`);
+    }
 
     // 204 No Content: don't try to parse JSON
     if (res.status === 204) return undefined as T;

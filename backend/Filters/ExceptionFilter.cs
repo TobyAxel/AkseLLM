@@ -56,6 +56,14 @@ public class ExceptionFilter : IExceptionFilter
             return;
         }
 
+        // Handle invalid operation exceptions (business rule violations)
+        if (context.Exception is InvalidOperationException)
+        {
+            context.Result = new BadRequestObjectResult(new { message = context.Exception.Message });
+            context.ExceptionHandled = true;
+            return;
+        }
+
         // Log and handle any other unhandled exceptions
         _logger.LogError(context.Exception, "An unhandled error occurred: {Message}", context.Exception.Message);
         context.Result = new ObjectResult(new { message = "An unexpected error occurred. Please try again later." })

@@ -1,18 +1,37 @@
-import { createPortal } from "react-dom";
+import { useEffect } from "react";
 import { useLLMStore } from "../stores/useLLMStore";
 import Message from "./ui/Message";
 import TextField from "./ui/TextField";
+import { llmService } from "../services";
 
 
 function ChatPanel() {
-    const { selectedLLM } = useLLMStore();
+    const { selectedLLM, setMessages, messages } = useLLMStore();
+
+    useEffect(() => {
+        setMessages([]);
+        
+        if (!selectedLLM) return;
+
+        let isCurrent = true;
+        
+        llmService.getMessages(selectedLLM.id).then((chatMessages) => {
+            if (isCurrent) {
+                setMessages(chatMessages);
+            }
+        });
+
+        return () => {
+            isCurrent = false;
+        };
+    }, [selectedLLM]);
 
     if (!selectedLLM) return null;
 
     return (
         <div className="relative h-dvh w-auto px-20 flex-1">
             <div>
-                {selectedLLM.chatHistory?.map((msg, index) => (
+                {messages?.map((msg, index) => (
                     <Message
                         key={index}
                         role={msg.role}
@@ -21,7 +40,7 @@ function ChatPanel() {
                     />
                 ))}
             </div>
-            <TextField/>
+            <TextField />
         </div>
     );
 }

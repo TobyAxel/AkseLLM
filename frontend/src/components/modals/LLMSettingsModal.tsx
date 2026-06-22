@@ -1,10 +1,10 @@
 import { FiCpu, FiType, FiX, FiChevronDown } from "react-icons/fi";
-import Modal from "../../ui/Modal";
-import { useModalStore } from "../../../stores/useModalStore";
-import { LLMProvider, ProviderModels } from "../../../domain";
+import Modal from "../ui/Modal";
+import { useModalStore } from "../../stores/useModalStore";
+import { LLMProvider, ProviderModels, type LLMConfig } from "../../domain";
 import { useState, useEffect } from "react";
-import { llmService } from "../../../services";
-import { useLLMStore } from "../../../stores/useLLMStore";
+import { llmService } from "../../services";
+import { useLLMStore } from "../../stores/useLLMStore";
 
 function LLMSettingsModal() {
     const { activeModal, closeModal, llmSettingsTarget } = useModalStore();
@@ -13,30 +13,61 @@ function LLMSettingsModal() {
     const [config, setConfig] = useState(llmSettingsTarget?.config);
     const [error, setError] = useState<string | null>(null);
     const [advancedOpen, setAdvancedOpen] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
     const { updateLLM, removeLLM } = useLLMStore();
 
     useEffect(() => {
         setName(llmSettingsTarget?.name ?? "");
         setConfig(llmSettingsTarget?.config);
         setAdvancedOpen(false);
+        setConfirmingDelete(false);
     }, [llmSettingsTarget]);
 
-    const isUnchanged = name.trim() === llmSettingsTarget?.name && config === llmSettingsTarget?.config;
+    useEffect(() => {
+        if (!confirmingDelete) return;
+
+        const timeout = setTimeout(() => {
+            setConfirmingDelete(false);
+        }, 3000);
+
+        return () => clearTimeout(timeout);
+    }, [confirmingDelete]);
+
+    const isUnchanged = name.trim() === llmSettingsTarget?.name && configEquals(config, llmSettingsTarget?.config);
 
     const patch = (partial: Partial<NonNullable<typeof config>>) =>
         setConfig((prev) => prev ? { ...prev, ...partial } : prev);
+
+    function configEquals(a: LLMConfig | undefined, b: LLMConfig | undefined): boolean {
+        if (a === b) return true;
+        if (!a || !b) return false;
+
+        const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof LLMConfig>;
+
+        for (const key of keys) {
+            const av = a[key];
+            const bv = b[key];
+
+            if (Array.isArray(av) && Array.isArray(bv)) {
+                if (av.length !== bv.length || av.some((v, i) => v !== bv[i])) return false;
+            } else if (av !== bv) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim() || isUnchanged) return;
         try {
             setError(null);
-            const llm = await llmService.update({
-                id: llmSettingsTarget!.id,
+            const llm = await llmService.update(llmSettingsTarget!.id, {
                 name: name.trim(),
                 config,
             });
-            updateLLM(llm[0]);
+            updateLLM(llm);
             closeModal();
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to update LLM");
@@ -47,12 +78,13 @@ function LLMSettingsModal() {
         try {
             setError(null);
             await llmService.delete(llmSettingsTarget!.id);
-            removeLLM(llmSettingsTarget!.id)
+            removeLLM(llmSettingsTarget!.id);
             closeModal();
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to delete LLM");
+            setConfirmingDelete(false);
         }
-    }
+    };
 
     const inputCls = "w-full bg-neutral-900/50 text-white px-3 py-2 rounded-lg border border-neutral-700 focus:outline-none focus:border-neutral-500 focus:ring-2 focus:ring-neutral-500/20 transition-all placeholder:text-neutral-600 text-sm";
     const labelCls = "block text-neutral-300 text-sm font-medium";
@@ -297,14 +329,25 @@ function LLMSettingsModal() {
 
                 {/* Buttons */}
                 <div className="relative flex justify-end gap-3 pt-4">
-                    <button
-                        type="button"
-                        onClick={deleteLLM}
-                        aria-label="Delete LLM"
-                        className="absolute left-0 px-5 py-2.5 cursor-pointer bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 font-medium shadow-lg shadow-red-900/30"
-                    >
-                        Delete
-                    </button>
+                    {confirmingDelete ? (
+                        <button
+                            type="button"
+                            onClick={deleteLLM}
+                            aria-label="Confirm delete"
+                            className="absolute left-0 px-5 py-2.5 cursor-pointer bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 font-medium shadow-lg shadow-red-900/30"
+                        >
+                            Confirm
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setConfirmingDelete(true)}
+                            aria-label="Delete LLM"
+                            className="absolute left-0 px-5 py-2.5 cursor-pointer bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 font-medium shadow-lg shadow-red-900/30"
+                        >
+                            Delete
+                        </button>
+                    )}
 
                     <button
                         type="button"
@@ -314,7 +357,7 @@ function LLMSettingsModal() {
                     >
                         Cancel
                     </button>
-                    
+
                     <button
                         type="submit"
                         disabled={!name.trim() || isUnchanged}

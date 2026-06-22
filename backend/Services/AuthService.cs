@@ -1,10 +1,8 @@
 using backend.Helpers;
 using backend.Models.Common;
-using backend.Models.Domain;
 using backend.Models.DTOs.Auth;
 using Supabase.Gotrue;
 using backend.Exceptions;
-using System.Collections.Generic;
 
 namespace backend.Services
 {
@@ -45,63 +43,64 @@ namespace backend.Services
             );
 
             // Sign in immediately after registration to obtain a session token
-            var signInResponse = await supabase.Auth.SignIn(
+            var session = await supabase.Auth.SignIn(
                 registerDto.Email,
                 registerDto.Password
             );
 
-            if (signInResponse?.User == null)
-                throw new ValidationException("Failed to sign in after registration");
+            // Email confirmation should be disabled so this should pass successfully 
+            if (session?.User == null || session.User.Id == null || session.User.Email == null)
+            {
+                Console.WriteLine("Error occured during sign-up. Please ensure that email confirmation is disabled from supabase settings.");
+                throw new ValidationException("Failed to sign in after registration.");
+
+            }
 
             // Extract user profile fields from Supabase metadata
-            var metadata = signInResponse.User.UserMetadata;
-            metadata.TryGetValue("display_name", out var dnObj);
-            metadata.TryGetValue("plan", out var planObj);
+            var metadata = MetadataHelper.GetMetadata(session.User);
 
             var response = new AuthResponseDto
             {
                 User = new UserProfile
                 {
-                    Id = signInResponse.User.Id!,
-                    Username = dnObj!.ToString()!,
-                    Email = signInResponse.User.Email!,
-                    Plan = planObj!.ToString()!,
-                    CreatedAt = signInResponse.User.CreatedAt
+                    Id = session.User.Id,
+                    Username = metadata["display_name"].ToString()!,
+                    Email = session.User.Email,
+                    Plan = metadata["plan"].ToString()!,
+                    CreatedAt = session.User.CreatedAt
                 }
             };
 
-            return (response, signInResponse.AccessToken!, signInResponse.RefreshToken!);
+            return (response, session.AccessToken!, session.RefreshToken!);
         }
 
         public async Task<(AuthResponseDto user, string token, string refreshToken)> LoginAsync(LoginDto loginDto)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
-            var signInResponse = await supabase.Auth.SignIn(
+            var session = await supabase.Auth.SignIn(
                 loginDto.Email,
                 loginDto.Password
             );
 
-            if (signInResponse?.User == null)
+            if (session?.User == null || session.User.Id == null || session.User.Email == null)
                 throw new ValidationException("Invalid credentials");
 
             // Extract user profile fields from Supabase metadata
-            var metadata = signInResponse.User.UserMetadata;
-            metadata.TryGetValue("display_name", out var dnObj);
-            metadata.TryGetValue("plan", out var planObj);
+            var metadata = MetadataHelper.GetMetadata(session.User);
 
             var response = new AuthResponseDto
             {
                 User = new UserProfile
                 {
-                    Id = signInResponse.User.Id!,
-                    Username = dnObj!.ToString()!,
-                    Email = signInResponse.User.Email!,
-                    Plan = planObj!.ToString()!,
-                    CreatedAt = signInResponse.User.CreatedAt
+                    Id = session.User.Id,
+                    Username = metadata["display_name"].ToString()!,
+                    Email = session.User.Email,
+                    Plan = metadata["plan"].ToString()!,
+                    CreatedAt = session.User.CreatedAt
                 }
             };
 
-            return (response, signInResponse.AccessToken!, signInResponse.RefreshToken!);
+            return (response, session.AccessToken!, session.RefreshToken!);
         }
 
         public async Task LogoutAsync(string token, string refreshToken)
@@ -121,22 +120,20 @@ namespace backend.Services
             await supabase.Auth.SetSession(token, refreshToken);
             var user = supabase.Auth.CurrentUser;
 
-            if (user == null)
+            if (user == null || user.Id == null || user.Email == null)
                 throw new UnauthorizedAccessException("Invalid session");
 
             // Extract user profile fields from Supabase metadata
-            var metadata = user.UserMetadata;
-            metadata.TryGetValue("display_name", out var dnObj);
-            metadata.TryGetValue("plan", out var planObj);
+            var metadata = MetadataHelper.GetMetadata(user);
 
             var response = new AuthResponseDto
             {
                 User = new UserProfile
                 {
-                    Id = user.Id!,
-                    Username = dnObj!.ToString()!,
-                    Email = user.Email!,
-                    Plan = planObj!.ToString()!,
+                    Id = user.Id,
+                    Username = metadata["display_name"].ToString()!,
+                    Email = user.Email,
+                    Plan = metadata["plan"].ToString()!,
                     CreatedAt = user.CreatedAt
                 }
             };

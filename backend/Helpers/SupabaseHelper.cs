@@ -10,7 +10,7 @@ namespace backend.Helpers
             var key = Environment.GetEnvironmentVariable("SUPABASE_PUBLIC_KEY");
 
             if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
-                throw new InvalidOperationException("SUPABASE_URL and SUPABASE_KEY must be set");
+                throw new InvalidOperationException("SUPABASE_URL and SUPABASE_PUBLIC_KEY must be set");
 
             var options = new Supabase.SupabaseOptions
             {

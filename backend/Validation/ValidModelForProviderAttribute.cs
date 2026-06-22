@@ -9,7 +9,9 @@ namespace backend.Validation
     {
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            var config = (LLMConfig)validationContext.ObjectInstance;
+            var config = validationContext.ObjectInstance as LLMConfig;
+
+            if (config == null) throw new ValidationException("Selected model is not valid for the chosen LLM provider.");
 
             // Look up the list of valid models for this provider
             if (!ProviderModels.Available.TryGetValue(config.Provider, out var models))

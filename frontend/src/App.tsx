@@ -7,37 +7,50 @@ import { useLLMStore } from "./stores/useLLMStore";
 import { authService } from "./services/authService";
 import { llmService } from "./services/llmService";
 import ChatPanel from "./components/ChatPanel";
+import ToastRenderer from "./ToastRenderer";
+import { useToastStore } from "./stores/useToastStore";
 
 function App() {
-    const { setProfile } = useUserStore();
+    const { setProfile, clearProfile } = useUserStore();
     const { openModal } = useModalStore();
     const { setLLMs } = useLLMStore();
-    const [loading, setLoading] = useState(true);
+    const { showError } = useToastStore();
+    const [authLoading, setAuthLoading] = useState(true);
 
-    // Check for existing session on mount, hydrate stores if valid
+    // Check for existing session on mount
     useEffect(() => {
         authService.me()
-            .then(async (res) => {
+            .then((res) => {
                 setProfile(res.user);
-                const llms = await llmService.getAll();
-                setLLMs(llms);
             })
             .catch(() => {
                 // No active session, show auth modal
+                clearProfile();
                 openModal("auth");
             })
             .finally(() => {
-                setLoading(false);
+                setAuthLoading(false);
             });
     }, []);
 
-    if (loading) return null;
+    // Fetch LLMs once we know who the user is
+    const profile = useUserStore((s) => s.profile);
+    useEffect(() => {
+        if (!profile) return;
+
+        llmService.getAll()
+            .then(setLLMs)
+            .catch(() => showError("Failed to load LLMs."));
+    }, [profile]);
+
+    if (authLoading) return null;
 
     return (
         <div className="flex">
             <SideBar />
             <ChatPanel />
             <ModalRenderer />
+            <ToastRenderer />
         </div>
     );
 }

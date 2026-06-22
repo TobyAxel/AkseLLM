@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiType, FiCpu, FiChevronDown } from "react-icons/fi";
-import Modal from "../../ui/Modal";
-import { useModalStore } from "../../../stores/useModalStore";
-import { useLLMStore } from "../../../stores/useLLMStore";
-import { llmService } from "../../../services/llmService";
-import { ProviderModels } from "../../../domain/enums/ProviderModels";
-import { LLMProvider } from "../../../domain/enums/LLMProvider";
-import type { LLMConfig } from "../../../domain";
+import Modal from "../ui/Modal";
+import { useModalStore } from "../../stores/useModalStore";
+import { useLLMStore } from "../../stores/useLLMStore";
+import { llmService } from "../../services/llmService";
+import { ProviderModels } from "../../domain/enums/ProviderModels";
+import { LLMProvider } from "../../domain/enums/LLMProvider";
+import type { LLMConfig } from "../../domain";
 
 const DEFAULT_CONFIG: LLMConfig = {
     provider: LLMProvider.Ollama,
@@ -19,12 +19,20 @@ const DEFAULT_CONFIG: LLMConfig = {
 function LLMCreateModal() {
     const { activeModal, closeModal } = useModalStore();
     const { addLLM } = useLLMStore();
-
     const availableModels = ProviderModels[LLMProvider.Ollama];
     const [name, setName] = useState("");
     const [config, setConfig] = useState<LLMConfig>({ ...DEFAULT_CONFIG, model: availableModels[0] ?? "" });
     const [error, setError] = useState<string | null>(null);
     const [advancedOpen, setAdvancedOpen] = useState(false);
+
+    useEffect(() => {
+        if (activeModal !== "llmCreate") return;
+
+        setName("");
+        setConfig({ ...DEFAULT_CONFIG, model: availableModels[0] ?? "" });
+        setAdvancedOpen(false);
+        setError(null);
+    }, [activeModal]);
 
     const patch = (partial: Partial<LLMConfig>) =>
         setConfig((prev) => ({ ...prev, ...partial }));
@@ -36,7 +44,7 @@ function LLMCreateModal() {
         try {
             setError(null);
             const llm = await llmService.create({ name: name.trim(), config });
-            addLLM(llm[0]);
+            addLLM(llm);
             setName("");
             setConfig({ ...DEFAULT_CONFIG, model: availableModels[0] ?? "" });
             setAdvancedOpen(false);

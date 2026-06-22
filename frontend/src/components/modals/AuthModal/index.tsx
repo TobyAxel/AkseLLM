@@ -24,7 +24,6 @@ function AuthModal() {
             setLLMs(llms);
             closeModal();
         } catch (e) {
-            console.log(e)
             setError(e instanceof Error ? e.message : "Login failed");
         }
     };

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { FiLogOut } from "react-icons/fi";
-import Modal from "../../ui/Modal";
-import { useModalStore } from "../../../stores/useModalStore";
-import { useUserStore } from "../../../stores/useUserStore";
-import { useLLMStore } from "../../../stores/useLLMStore";
-import { authService } from "../../../services/authService";
+import Modal from "../ui/Modal";
+import { useModalStore } from "../../stores/useModalStore";
+import { useUserStore } from "../../stores/useUserStore";
+import { useLLMStore } from "../../stores/useLLMStore";
+import { authService } from "../../services/authService";
 
 function LogoutConfirmModal() {
     const { activeModal, closeModal, openModal } = useModalStore();
