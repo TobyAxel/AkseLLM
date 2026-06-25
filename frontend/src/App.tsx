@@ -17,14 +17,16 @@ function App() {
     const { showError } = useToastStore();
     const [authLoading, setAuthLoading] = useState(true);
 
-    // Check for existing session on mount
+    // Check for existing session on mount & hydrate stores
     useEffect(() => {
         authService.me()
             .then((res) => {
                 setProfile(res.user);
+                llmService.getAll()
+                    .then(setLLMs)
+                    .catch(() => showError("Failed to load LLMs."));
             })
             .catch(() => {
-                // No active session, show auth modal
                 clearProfile();
                 openModal("auth");
             })
@@ -32,16 +34,6 @@ function App() {
                 setAuthLoading(false);
             });
     }, []);
-
-    // Fetch LLMs once we know who the user is
-    const profile = useUserStore((s) => s.profile);
-    useEffect(() => {
-        if (!profile) return;
-
-        llmService.getAll()
-            .then(setLLMs)
-            .catch(() => showError("Failed to load LLMs."));
-    }, [profile]);
 
     if (authLoading) return null;
 

@@ -31,9 +31,10 @@ function ChatPanel() {
     return (
         <div className="relative h-dvh w-auto px-20 flex-1">
             <div>
-                {messages?.map((msg, index) => (
+                {messages?.map((msg) => (
                     <Message
-                        key={index}
+                        key={msg.id}
+                        id={msg.id}
                         role={msg.role}
                         content={msg.content}
                         createdAt={msg.createdAt}

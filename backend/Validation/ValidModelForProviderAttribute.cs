@@ -3,16 +3,14 @@ using backend.Models.Common;
 
 namespace backend.Validation
 {
-    // Custom validation attribute that ensures the selected model is valid for the chosen provider.
-    // Applied to the Model property on LLMConfig, so it has access to the full config object via validationContext.
     public class ValidModelForProviderAttribute : ValidationAttribute
     {
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             var config = validationContext.ObjectInstance as LLMConfig;
-
-            if (config == null) throw new ValidationException("Selected model is not valid for the chosen LLM provider.");
-
+            if (config is null)
+                return new ValidationResult("Validation context did not contain a valid LLMConfig instance.");
+            
             // Look up the list of valid models for this provider
             if (!ProviderModels.Available.TryGetValue(config.Provider, out var models))
                 return new ValidationResult($"Unknown provider: {config.Provider}");

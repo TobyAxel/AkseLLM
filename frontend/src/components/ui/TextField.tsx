@@ -3,14 +3,14 @@ import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { llmService } from "../../services";
 import { useLLMStore } from "../../stores/useLLMStore";
-import type { Message } from "../../domain";
 import { FiSend } from "react-icons/fi";
 import { useToastStore } from "../../stores/useToastStore";
+import type { Message } from "../../domain";
 
 function TextField() {
     const [input, setInput] = useState("");
     const [isSendingMessage, setIsSendingMessage] = useState(false);
-    const { selectedLLM, addMessage, removeLastMessage } = useLLMStore();
+    const { selectedLLM, addMessage, confirmMessage, cancelMessage } = useLLMStore();
     const { showError } = useToastStore();
 
     useEffect(() => {
@@ -19,24 +19,32 @@ function TextField() {
 
     const sendMessage = async () => {
         const storedInput = input;
-        setIsSendingMessage(true);
-        try {
-            const userMessage: Message = {
-                role: "user",
-                content: input,
-                createdAt: new Date().toISOString()
-            };
-            
-            setInput("")
-            addMessage(userMessage)
-            const message = await llmService.sendMessage(selectedLLM!.id, userMessage);
-            addMessage(message)
-            setIsSendingMessage(false);
+        const tempId = -Date.now();
 
+        const optimistic: Message = {
+            id: tempId,
+            role: "user",
+            content: storedInput,
+            createdAt: new Date().toISOString(),
+        };
+
+        setInput("");
+        setIsSendingMessage(true);
+        addMessage(optimistic);
+
+        try {
+            const messages = await llmService.sendMessage(selectedLLM!.id, input);
+
+            if (messages.userMessage == null || messages.assistantMessage == null) throw new Error("Unexpected response shape");
+
+            // Replace placeholder & add assistant reply
+            confirmMessage(tempId, messages.userMessage);
+            addMessage(messages.assistantMessage);
         } catch (e) {
             showError("Failed to send message.");
-            removeLastMessage();
-            setInput(storedInput)
+            cancelMessage(tempId);
+            setInput(storedInput);
+        } finally {
             setIsSendingMessage(false);
         }
     }

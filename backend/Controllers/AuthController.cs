@@ -19,33 +19,33 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto registerDto)
         {
-            var result = await _authService.RegisterAsync(registerDto);
+            var (authResponseDto, token, refreshToken) = await _authService.RegisterAsync(registerDto);
 
             // Store tokens in HttpOnly cookies so they're never accessible via JS
-            Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
-            Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("token", token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
 
-            return Ok(result.user);
+            return Ok(authResponseDto);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
         {
-            var result = await _authService.LoginAsync(loginDto);
+            var (authResponseDto, token, refreshToken) = await _authService.LoginAsync(loginDto);
 
             // Store tokens in HttpOnly cookies so they're never accessible via JS
-            Response.Cookies.Append("token", result.token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
-            Response.Cookies.Append("refreshToken", result.refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("token", token, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Strict });
 
-            return Ok(result.user);
+            return Ok(authResponseDto);
         }
 
         [HttpGet("me")]
         public async Task<ActionResult<AuthResponseDto>> GetCurrentUser()
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
-            AuthResponseDto result = await _authService.GetCurrentUserAsync(token, refreshToken);
-            return Ok(result);
+            AuthResponseDto authResponseDto = await _authService.GetCurrentUserAsync(token, refreshToken);
+            return Ok(authResponseDto);
         }
 
         [HttpPost("logout")]

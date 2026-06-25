@@ -19,7 +19,7 @@ public class ExceptionFilter : IExceptionFilter
     public void OnException(ExceptionContext context)
     {
         // Handle validation exceptions
-        if (context.Exception is Exceptions.ValidationException)
+        if (context.Exception is ValidationException)
         {
             // Business logic validation errors: input was understood but invalid
             context.Result = new BadRequestObjectResult(new { message = context.Exception.Message });
@@ -39,9 +39,29 @@ public class ExceptionFilter : IExceptionFilter
         // Handle Supabase exceptions (Gotrue and Postgrest)
         if (context.Exception is GotrueException or PostgrestException)
         {
-            // Extract meaningful error message from Supabase JSON response
+            int statusCode = context.Exception switch
+            {
+                GotrueException ge => ge.StatusCode,
+                PostgrestException pe => pe.StatusCode,
+                _ => 0
+            };
+
             var errorMessage = ParseSupabaseError(context.Exception.Message);
-            context.Result = new BadRequestObjectResult(new { message = errorMessage });
+
+            // No response at all, or Supabase-side 5xx
+            if (statusCode == 0 || statusCode >= 500)
+            {
+                _logger.LogError(context.Exception, "Supabase infrastructure error: {Message}", context.Exception.Message);
+                context.Result = new ObjectResult(new { message = "A dependent service is unavailable. Please try again shortly." })
+                {
+                    StatusCode = StatusCodes.Status502BadGateway
+                };
+            }
+            else
+            {
+                // 4xx from Supabase, client error
+                context.Result = new BadRequestObjectResult(new { message = errorMessage });
+            }
             context.ExceptionHandled = true;
             return;
         }

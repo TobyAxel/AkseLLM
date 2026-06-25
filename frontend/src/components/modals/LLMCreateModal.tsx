@@ -43,7 +43,10 @@ function LLMCreateModal() {
 
         try {
             setError(null);
-            const llm = await llmService.create({ name: name.trim(), config });
+            const llm = await llmService.create({ 
+                name: name.trim(), 
+                config
+            });
             addLLM(llm);
             setName("");
             setConfig({ ...DEFAULT_CONFIG, model: availableModels[0] ?? "" });

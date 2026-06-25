@@ -18,7 +18,11 @@ type LLMResponseDto = {
 
 type GetMessagesDto = {
     chatMessages: Message[],
-    message?: string;
+}
+
+type MessageResponseDto = {
+    userMessage: Message,
+    assistantMessage: Message
 }
 
 export const llmService = {
@@ -53,9 +57,9 @@ export const llmService = {
         request<GetMessagesDto>(`/api/llm/${id}/chat`).then((res) => res.chatMessages),
 
     // POST /api/llm/:id/chat
-    sendMessage: (id: number, message: Message) =>
-        request<GetMessagesDto>(`/api/llm/${id}/chat`, {
+    sendMessage: (id: number, message: string) =>
+        request<MessageResponseDto>(`/api/llm/${id}/chat`, {
             method: "POST",
             body: JSON.stringify(message)
-        }).then((res) => res.chatMessages[0])
+        }).then((res) => res)
 };

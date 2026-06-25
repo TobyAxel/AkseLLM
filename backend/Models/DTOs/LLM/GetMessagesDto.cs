@@ -7,6 +7,5 @@ namespace backend.Models.DTOs.LLM
     {
         [Required]   
         public required IEnumerable<Message> ChatMessages { get; set; }
-        public string? Message { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace backend.Services
         Task<LLMResponseDto> UpdateLLMAsync(int id, UpdateLLMDto updateLLMDto, string token, string refreshToken);
         Task DeleteLLMAsync(int id, string token, string refreshToken);
         Task<GetMessagesDto> GetLLMMessagesAsync(int id, string token, string refreshToken);
-        Task<GetMessagesDto> SendMessageToLLMAsync(int id, Message message, string token, string refreshToken);
+        Task<MessageResponseDto> SendMessageAsync(int id, string message, string token, string refreshToken);
     }
 
     public class LLMService : ILLMService
@@ -96,24 +96,23 @@ namespace backend.Services
             await supabase.Auth.SetSession(token, refreshToken);
 
             var user = supabase.Auth.CurrentUser;
-            if (user == null)
+            if (user == null || user.Id == null)
                 throw new UnauthorizedAccessException("Invalid or expired session");
 
-            var llmsRaw = await supabase.From<LLMEntity>()
+            var llms = await supabase.From<LLMEntity>()
                 .Where(x => x.UserId == user.Id)
                 .Get();
 
-            var llms = JsonSerializer.Deserialize<List<LLMEntity>>(llmsRaw.Content ?? "[]");
-
             // Limit llm count to 15, this is also enforced in RLS
-            if (llms!.Count >= 15)
+            if (llms.Models.Count >= 15)
                 throw new InvalidOperationException("The maximum amount of LLMs you can own has been reached.");
 
             var newLLM = new LLMEntity
             {
                 UserId = user.Id,
                 Name = createLLMDto.Name,
-                LLMConfig = createLLMDto.Config
+                LLMConfig = createLLMDto.Config,
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await supabase.From<LLMEntity>().Insert(newLLM);
@@ -213,33 +212,43 @@ namespace backend.Services
             if (user == null)
                 throw new UnauthorizedAccessException("Invalid or expired session");
 
+            // Ensure LLM belongs to user
+            var exists = await supabase.From<LLMEntity>()
+                .Where(x => x.UserId == user.Id && x.Id == id)
+                .Get();
+
+            var llm = exists.Models.FirstOrDefault();
+            if (llm == null)
+                throw new NotFoundException("LLM not found");
+
             var messages = await supabase.From<MessageEntity>()
-                .Where(m => m.LLMId == id)
+                .Where(msg => msg.LLMId == id)
                 .Order("created_at", Supabase.Postgrest.Constants.Ordering.Ascending)
-                .Limit(10)
+                .Limit(50)
                 .Get();
 
             return new GetMessagesDto
             {
-                ChatMessages = messages.Models.Select(m => new Message
+                ChatMessages = messages.Models.Select(msg => new Message
                 {
-                    Role = m.Role!,
-                    Content = m.Content!,
-                    CreatedAt = m.CreatedAt
+                    Id = msg.Id,
+                    Role = msg.Role!,
+                    Content = msg.Content!,
+                    CreatedAt = msg.CreatedAt
                 }).ToList()
             };
         }
 
-        public async Task<GetMessagesDto> SendMessageToLLMAsync(int id, Message message, string token, string refreshToken)
+        public async Task<MessageResponseDto> SendMessageAsync(int id, string message, string token, string refreshToken)
         {
-            if (message == null || string.IsNullOrWhiteSpace(message.Content))
+            if (message == null || string.IsNullOrWhiteSpace(message))
                 throw new MissingFieldException("No message given");
 
             var supabase = await SupabaseHelper.GetClientAsync();
             await supabase.Auth.SetSession(token, refreshToken);
 
             var user = supabase.Auth.CurrentUser;
-            if (user == null)
+            if (user == null || user.Id == null)
                 throw new UnauthorizedAccessException("Invalid or expired session");
 
             // Ensure LLM belongs to user
@@ -253,18 +262,21 @@ namespace backend.Services
 
             var userMessageEntity = new MessageEntity
             {
-                Role = message.Role,
-                Content = message.Content,
+                Role = "user",
+                Content = message,
                 LLMId = id,
                 CreatedAt = DateTime.UtcNow,
             };
 
-            var insertResult = await supabase
+            var userMessage = await supabase
                 .From<MessageEntity>()
                 .Insert(userMessageEntity);
 
+            if (userMessage.Model == null)
+                throw new Exception("Failed to send message");
+
             var historyResult = await supabase.From<MessageEntity>()
-                .Where(m => m.LLMId == id)
+                .Where(msg => msg.LLMId == id)
                 .Order("created_at", Supabase.Postgrest.Constants.Ordering.Ascending)
                 .Get();
 
@@ -286,20 +298,29 @@ namespace backend.Services
             };
 
             // Add llm response to chat history
-            await supabase
+            var assistantMessage = await supabase
                 .From<MessageEntity>()
                 .Insert(assistantMessageEntity);
 
-            var response = new GetMessagesDto
+            if (assistantMessage.Model == null)
+                throw new Exception("Unexpected error happened while responding");
+
+            var response = new MessageResponseDto
             {
-                ChatMessages = new List<Message>
+                UserMessage = new Message
                 {
-                    new Message
-                    {
-                        Role = assistantMessageEntity.Role!,
-                        Content = assistantMessageEntity.Content!,
-                        CreatedAt = assistantMessageEntity.CreatedAt
-                    }
+                    Id = userMessage.Model.Id,
+                    Role = userMessage.Model.Role,
+                    Content = userMessage.Model.Content,
+                    CreatedAt = userMessage.Model.CreatedAt
+                },
+                
+                AssistantMessage = new Message
+                {
+                    Id = assistantMessage.Model.Id,
+                    Role = assistantMessage.Model.Role,
+                    Content = assistantMessage.Model.Content,
+                    CreatedAt = assistantMessage.Model.CreatedAt
                 }
             };
 

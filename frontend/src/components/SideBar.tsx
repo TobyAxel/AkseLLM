@@ -6,14 +6,39 @@ import { useUserStore } from "../stores/useUserStore";
 import { useModalStore } from "../stores/useModalStore";
 import { useLLMStore } from "../stores/useLLMStore";
 import Avatar from "./ui/Avatar";
+import { llmService } from "../services";
+import { useToastStore } from "../stores/useToastStore";
+import type { LLMModel } from "../domain";
 
 function SideBar() {
     const { profile } = useUserStore();
     const { openModal } = useModalStore();
-    const { llms, selectedLLM, selectLLM } = useLLMStore();
+    const { llms, selectedLLM, selectLLM, removeLLM, updateLLM } = useLLMStore();
+    const { showError } = useToastStore();
     const [isOpen, setIsOpen] = useState(true);
 
     const loggedIn = profile !== null;
+
+    const handleSelectLLM = async (llm: LLMModel) => {
+        try {
+            selectLLM(llm);
+
+            const fresh = await llmService.getById(llm.id);
+
+            if (!fresh) {
+                removeLLM(llm.id);
+                return;
+            }
+
+            const current = llms.find((l) => l.id === fresh.id);
+            if (!current || JSON.stringify(current) !== JSON.stringify(fresh)) {
+                updateLLM(fresh);
+            }
+        } catch (e) {
+            showError(`Failed to refresh LLM ${llm.name}.`);
+        };
+    };
+
 
     return (
         <div className={twMerge(clsx(
@@ -61,7 +86,7 @@ function SideBar() {
                         return (
                             <li
                                 key={llm.id}
-                                onClick={() => selectLLM(llm)}
+                                onClick={() => handleSelectLLM(llm)}
                                 className={twMerge(clsx(
                                     "rounded-lg h-9 flex items-center pl-3 cursor-pointer transition-all duration-200 group relative overflow-hidden",
                                     isSelected ? "bg-neutral-800 shadow-lg shadow-neutral-900/50" : "hover:bg-neutral-800/50"

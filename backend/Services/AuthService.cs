@@ -9,15 +9,15 @@ namespace backend.Services
     // Defines authentication operations: register, login, logout, and session retrieval
     public interface IAuthService
     {
-        Task<(AuthResponseDto user, string token, string refreshToken)> RegisterAsync(RegisterDto registerDto);
-        Task<(AuthResponseDto user, string token, string refreshToken)> LoginAsync(LoginDto loginDto);
+        Task<(AuthResponseDto authResponseDto, string token, string refreshToken)> RegisterAsync(RegisterDto registerDto);
+        Task<(AuthResponseDto authResponseDto, string token, string refreshToken)> LoginAsync(LoginDto loginDto);
         Task LogoutAsync(string token, string refreshToken);
         Task<AuthResponseDto> GetCurrentUserAsync(string token, string refreshToken);
     }
 
     public class AuthService : IAuthService
     {
-        public async Task<(AuthResponseDto user, string token, string refreshToken)> RegisterAsync(RegisterDto registerDto)
+        public async Task<(AuthResponseDto authResponseDto, string token, string refreshToken)> RegisterAsync(RegisterDto registerDto)
         {
             // Trim whitespace from username before validation
             registerDto.Username = registerDto.Username.Trim();
@@ -59,7 +59,7 @@ namespace backend.Services
             // Extract user profile fields from Supabase metadata
             var metadata = MetadataHelper.GetMetadata(session.User);
 
-            var response = new AuthResponseDto
+            var authResponseDto = new AuthResponseDto
             {
                 User = new UserProfile
                 {
@@ -71,10 +71,10 @@ namespace backend.Services
                 }
             };
 
-            return (response, session.AccessToken!, session.RefreshToken!);
+            return (authResponseDto, session.AccessToken!, session.RefreshToken!);
         }
 
-        public async Task<(AuthResponseDto user, string token, string refreshToken)> LoginAsync(LoginDto loginDto)
+        public async Task<(AuthResponseDto authResponseDto, string token, string refreshToken)> LoginAsync(LoginDto loginDto)
         {
             var supabase = await SupabaseHelper.GetClientAsync();
             var session = await supabase.Auth.SignIn(
@@ -88,7 +88,7 @@ namespace backend.Services
             // Extract user profile fields from Supabase metadata
             var metadata = MetadataHelper.GetMetadata(session.User);
 
-            var response = new AuthResponseDto
+            var authResponseDto = new AuthResponseDto
             {
                 User = new UserProfile
                 {
@@ -100,7 +100,7 @@ namespace backend.Services
                 }
             };
 
-            return (response, session.AccessToken!, session.RefreshToken!);
+            return (authResponseDto, session.AccessToken!, session.RefreshToken!);
         }
 
         public async Task LogoutAsync(string token, string refreshToken)
@@ -126,7 +126,7 @@ namespace backend.Services
             // Extract user profile fields from Supabase metadata
             var metadata = MetadataHelper.GetMetadata(user);
 
-            var response = new AuthResponseDto
+            var authResponseDto = new AuthResponseDto
             {
                 User = new UserProfile
                 {
@@ -138,7 +138,7 @@ namespace backend.Services
                 }
             };
 
-            return response;
+            return authResponseDto;
         }
 
         private void ValidateUsername(string username)

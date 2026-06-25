@@ -66,10 +66,10 @@ namespace backend.Controllers
         }
 
         [HttpPost("{id}/chat")]
-        public async Task<ActionResult<GetMessagesDto>> SendMessageToLLM(int id, [FromBody] Message message)
+        public async Task<ActionResult<MessageResponseDto>> SendMessage(int id, [FromBody] string message)
         {
             var (token, refreshToken) = CookieHelper.GetTokensFromCookies(Request.Cookies);
-            var result = await _llmService.SendMessageToLLMAsync(id, message, token, refreshToken);
+            var result = await _llmService.SendMessageAsync(id, message, token, refreshToken);
             return Ok(result);
         }
     }

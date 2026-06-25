@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 
@@ -16,12 +16,15 @@ const sizes = {
 };
 
 function Modal({ isOpen, onClose, size = "md", children }: ModalProps) {
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
+
     useEffect(() => {
         if (!isOpen) return;
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose?.();
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCloseRef.current?.();
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
