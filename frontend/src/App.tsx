@@ -11,40 +11,47 @@ import ToastRenderer from "./ToastRenderer";
 import { useToastStore } from "./stores/useToastStore";
 
 function App() {
-    const { setProfile, clearProfile } = useUserStore();
-    const { openModal } = useModalStore();
-    const { setLLMs } = useLLMStore();
-    const { showError } = useToastStore();
-    const [authLoading, setAuthLoading] = useState(true);
+  const { setProfile, clearProfile } = useUserStore();
+  const { openModal } = useModalStore();
+  const { setLLMs } = useLLMStore();
+  const { showError } = useToastStore();
+  const [authLoading, setAuthLoading] = useState(true);
 
-    // Check for existing session on mount & hydrate stores
-    useEffect(() => {
-        authService.me()
-            .then((res) => {
-                setProfile(res.user);
-                llmService.getAll()
-                    .then(setLLMs)
-                    .catch(() => showError("Failed to load LLMs."));
-            })
-            .catch(() => {
-                clearProfile();
-                openModal("auth");
-            })
-            .finally(() => {
-                setAuthLoading(false);
-            });
-    }, []);
+  // Check for existing session on mount & hydrate stores
+  useEffect(() => {
+    authService.me()
+      .then((res) => {
+        setProfile(res.user);
+        llmService.getAll()
+          .then(setLLMs)
+          .catch(() => showError("Failed to load LLMs."));
+      })
+      .catch(() => {
+        clearProfile();
+        setLLMs([]);
+        openModal("auth");
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
 
-    if (authLoading) return null;
-
+  if (authLoading) {
     return (
-        <div className="flex">
-            <SideBar />
-            <ChatPanel />
-            <ModalRenderer />
-            <ToastRenderer />
-        </div>
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-gray-800" />
+      </div>
     );
+  }
+
+  return (
+    <div className="flex">
+      <SideBar />
+      <ChatPanel />
+      <ModalRenderer />
+      <ToastRenderer />
+    </div>
+  );
 }
 
 export default App;

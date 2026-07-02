@@ -5,7 +5,7 @@ import RegisterView from "./views/RegisterView";
 import { useModalStore } from "../../../stores/useModalStore";
 import { useUserStore } from "../../../stores/useUserStore";
 import { authService } from "../../../services/authService";
-import { llmService } from "../../../services";
+import { llmService } from "../../../services/llmService";
 import { useLLMStore } from "../../../stores/useLLMStore";
 
 function AuthModal() {
@@ -33,6 +33,7 @@ function AuthModal() {
             setError(null);
             const res = await authService.register(data);
             setProfile(res.user);
+            setLLMs([]);
             closeModal();
         } catch (e) {
             setError(e instanceof Error ? e.message : "Registration failed");

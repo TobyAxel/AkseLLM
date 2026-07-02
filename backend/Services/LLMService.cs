@@ -197,10 +197,25 @@ namespace backend.Services
             if (user == null)
                 throw new UnauthorizedAccessException("Invalid or expired session");
 
-            // Filter by both user ID and LLM ID to prevent users deleting each other's LLMs
-            await supabase.From<LLMEntity>()
-                .Where(x => x.UserId == user.Id && x.Id == id)
+            // Verify the LLM exists and belongs to the current user before deletion
+            var exists = await supabase.From<LLMEntity>()
+                .Where(x => x.UserId == user.Id)
+                .Where(x => x.Id == id)
+                .Get();
+
+            var llmEntity = exists.Models.FirstOrDefault();
+
+            if (llmEntity == null)
+                throw new NotFoundException("LLM not found");
+
+            // Remove the LLM and its associated messages from the database
+            await supabase.From<MessageEntity>()
+                .Where(x => x.LLMId == id)
                 .Delete();
+
+            await supabase.From<LLMEntity>()
+                .Where(x => x.Id == id)
+                .Delete();   
         }
 
         public async Task<GetMessagesDto> GetLLMMessagesAsync(int id, string token, string refreshToken)
@@ -241,8 +256,8 @@ namespace backend.Services
 
         public async Task<MessageResponseDto> SendMessageAsync(int id, string message, string token, string refreshToken)
         {
-            if (message == null || string.IsNullOrWhiteSpace(message))
-                throw new MissingFieldException("No message given");
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ValidationException("No message given");
 
             var supabase = await SupabaseHelper.GetClientAsync();
             await supabase.Auth.SetSession(token, refreshToken);
@@ -278,6 +293,7 @@ namespace backend.Services
             var historyResult = await supabase.From<MessageEntity>()
                 .Where(msg => msg.LLMId == id)
                 .Order("created_at", Supabase.Postgrest.Constants.Ordering.Ascending)
+                .Limit(10)
                 .Get();
 
             var chatHistory = historyResult.Models.ToList();

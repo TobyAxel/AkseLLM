@@ -3,10 +3,12 @@ import { useLLMStore } from "../stores/useLLMStore";
 import Message from "./ui/Message";
 import TextField from "./ui/TextField";
 import { llmService } from "../services";
+import { useToastStore } from "../stores/useToastStore";
 
 
 function ChatPanel() {
     const { selectedLLM, setMessages, messages } = useLLMStore();
+    const { showError } = useToastStore();
 
     useEffect(() => {
         setMessages([]);
@@ -19,6 +21,8 @@ function ChatPanel() {
             if (isCurrent) {
                 setMessages(chatMessages);
             }
+        }).catch((error) => {
+            showError(error.message || "Failed to fetch chat messages.");
         });
 
         return () => {

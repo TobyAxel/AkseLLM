@@ -23,9 +23,11 @@ Core infrastructure, authentication, and LLM configuration management are comple
 ## Not yet implemented
 
 - Actual Ollama inference: sending a message currently returns `"placeholder"` as the assistant response and persists it to the database
-- Token refresh: sessions are not renewed automatically after the access token expires
+- Token refresh: sessions are not renewed automatically after the Supabase access token expires (~1 hour)
 - Account settings: the username update form is a stub with no backend wiring
 - General and Plan settings tabs are empty stubs
+- Enter-to-send shortcut in the chat input
+- Auto-scroll to the latest message when new messages arrive
 
 ---
 
