@@ -36,6 +36,14 @@ public class ExceptionFilter : IExceptionFilter
             return;
         }
 
+        // Handle conflict exceptions
+        if (context.Exception is ConflictException)
+        {
+            context.Result = new ConflictObjectResult(new { message = context.Exception.Message });
+            context.ExceptionHandled = true;
+            return;
+        }
+
         // Handle Supabase exceptions (Gotrue and Postgrest)
         if (context.Exception is GotrueException or PostgrestException)
         {
@@ -98,7 +106,15 @@ public class ExceptionFilter : IExceptionFilter
         try
         {
             using var doc = JsonDocument.Parse(errorJson);
-            return doc.RootElement.GetProperty("msg").GetString() ?? errorJson;
+
+            // Gotrue (auth) errors use "msg", Postgrest (DB) errors use "message"
+            if (doc.RootElement.TryGetProperty("msg", out var msg))
+                return msg.GetString() ?? errorJson;
+
+            if (doc.RootElement.TryGetProperty("message", out var message))
+                return message.GetString() ?? errorJson;
+
+            return errorJson;
         }
         catch
         {

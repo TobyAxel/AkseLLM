@@ -18,6 +18,7 @@ Core infrastructure, authentication, and LLM configuration management are comple
 - Edit or delete existing configurations
 - Persistent chat history per LLM (last 50 messages)
 - Optimistic message UI with rollback on failure
+- One response in flight per LLM: concurrent sends to the same LLM are rejected with 409 rather than racing
 - HttpOnly cookie authentication (SameSite=Strict)
 
 ## Not yet implemented
@@ -26,8 +27,6 @@ Core infrastructure, authentication, and LLM configuration management are comple
 - Token refresh: sessions are not renewed automatically after the Supabase access token expires (~1 hour)
 - Account settings: the username update form is a stub with no backend wiring
 - General and Plan settings tabs are empty stubs
-- Enter-to-send shortcut in the chat input
-- Auto-scroll to the latest message when new messages arrive
 
 ---
 
@@ -125,10 +124,7 @@ create policy "Users can view their own llms"
 
 create policy "Users can insert their own llms"
   on llms for insert
-  with check (
-    user_id = auth.uid()
-    and (select count(*) from llms where user_id = auth.uid()) < 15
-  );
+  with check (user_id = auth.uid());
 
 create policy "Users can update their own llms"
   on llms for update
@@ -159,9 +155,59 @@ create policy "Users can send messages to their own llms"
         and llms.user_id = auth.uid()
     )
   );
+
+-- Per-user LLM limit, enforced with a custom error message.
+-- RLS policies can only return true/false, so the cap lives in a trigger
+-- to control the message and HTTP status the client receives.
+create or replace function enforce_llm_limit()
+returns trigger as $$
+begin
+  if (select count(*) from llms where user_id = new.user_id) >= 15 then
+    raise sqlstate 'PT400' using message = 'Maximum number of LLMs reached (15).';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger llm_limit_check
+  before insert on llms
+  for each row
+  execute function enforce_llm_limit();
+
+-- Serializes chat generation per LLM: a request claims the row before generating
+-- and releases it after, so two concurrent sends to the same LLM can't race.
+-- The lease expires on its own so a crashed request can't lock the LLM forever.
+alter table llms add column generating_since timestamptz;
+
+create or replace function claim_llm_generation(target_llm bigint)
+returns boolean as $$
+declare
+  claimed bigint;
+begin
+  update llms
+  set generating_since = now()
+  where id = target_llm
+    and user_id = auth.uid()
+    and (generating_since is null or generating_since < now() - interval '5 minutes')
+  returning id into claimed;
+
+  return claimed is not null;
+end;
+$$ language plpgsql;
+
+create or replace function release_llm_generation(target_llm bigint)
+returns void as $$
+begin
+  update llms
+  set generating_since = null
+  where id = target_llm and user_id = auth.uid();
+end;
+$$ language plpgsql;
 ```
 
-The INSERT policy on `llms` enforces the 15-configuration limit at the database level, in addition to the application-level check in `LLMService`. The `messages` table has no UPDATE or DELETE policy, so message history is append-only.
+The RLS policies enforce ownership: users can only read and modify their own rows. The 15-configuration limit is enforced by the `enforce_llm_limit` trigger rather than the INSERT policy, because a policy can only evaluate to true or false and would surface a generic `row violates row-level security policy` error. The trigger uses PostgREST's `PT<status>` SQLSTATE convention to return a 400 with a readable message. To change the limit, edit the number in the function only. The `messages` table has no UPDATE or DELETE policy, so message history is append-only.
+
+`claim_llm_generation` and `release_llm_generation` back the per-LLM send lock: `LLMService.SendMessageAsync` calls the former before generating and the latter in a `finally`, returning 409 if the claim fails. The 5-minute lease is a placeholder until real Ollama generation times are known — it needs to cover worst-case queue wait plus generation, not just generation itself, or a still-queued request can lose its lease to a new one.
 
 ### Backend
 
@@ -231,7 +277,7 @@ All endpoints are under `/api`. Auth tokens are stored in HttpOnly cookies and s
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/llm/:id/chat` | Get the last 50 messages for an LLM |
-| POST | `/api/llm/:id/chat` | Send a message (inference not yet implemented) |
+| POST | `/api/llm/:id/chat` | Send a message (inference not yet implemented). Returns 409 if this LLM is already generating a response |
 
 ---
 

@@ -1,10 +1,11 @@
 import { twMerge } from "tailwind-merge";
 import { clsx } from "clsx";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { llmService } from "../../services";
 import { useLLMStore } from "../../stores/useLLMStore";
 import { FiSend } from "react-icons/fi";
 import { useToastStore } from "../../stores/useToastStore";
+import { useModalStore } from "../../stores/useModalStore";
 import type { Message } from "../../domain";
 
 function TextField() {
@@ -12,10 +13,22 @@ function TextField() {
     const [isSendingMessage, setIsSendingMessage] = useState(false);
     const { selectedLLM, addMessage, confirmMessage, cancelMessage } = useLLMStore();
     const { showError } = useToastStore();
+    const { activeModal } = useModalStore();
+
+    const canSend = input.trim().length > 0 && !isSendingMessage;
 
     useEffect(() => {
-        setInput("")
+        setInput("");
     }, [selectedLLM]);
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+
+        if (activeModal) return;
+
+        e.preventDefault();
+        if (canSend) sendMessage();
+    };
 
     const sendMessage = async () => {
         const storedInput = input;
@@ -33,7 +46,7 @@ function TextField() {
         addMessage(optimistic);
 
         try {
-            const messages = await llmService.sendMessage(selectedLLM!.id, input);
+            const messages = await llmService.sendMessage(selectedLLM!.id, storedInput);
 
             if (messages.userMessage == null || messages.assistantMessage == null) throw new Error("Unexpected response shape");
 
@@ -41,7 +54,7 @@ function TextField() {
             confirmMessage(tempId, messages.userMessage);
             addMessage(messages.assistantMessage);
         } catch (e) {
-            showError("Failed to send message.");
+            showError(e instanceof Error ? e.message : "Failed to send message.");
             cancelMessage(tempId);
             setInput(storedInput);
         } finally {
@@ -66,11 +79,12 @@ function TextField() {
                     placeholder="Type a message..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
                 />
 
                 <button
                     className="text-neutral-300 transition cursor-pointer hover:text-white"
-                    disabled={!input.trim() || isSendingMessage}
+                    disabled={!canSend}
                     onClick={sendMessage}
                 >
                     <FiSend size={18} />

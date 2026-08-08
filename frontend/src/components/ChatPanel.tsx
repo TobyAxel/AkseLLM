@@ -1,22 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLLMStore } from "../stores/useLLMStore";
 import Message from "./ui/Message";
 import TextField from "./ui/TextField";
 import { llmService } from "../services";
 import { useToastStore } from "../stores/useToastStore";
 
+// Band rather than an exact match, since subpixel rounding means the
+// distance is rarely exactly zero at non-default browser zoom
+const STICK_THRESHOLD_PX = 100;
+
 
 function ChatPanel() {
     const { selectedLLM, setMessages, messages } = useLLMStore();
     const { showError } = useToastStore();
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const isPinnedToBottom = useRef(true);
 
     useEffect(() => {
         setMessages([]);
-        
+        isPinnedToBottom.current = true;
+
         if (!selectedLLM) return;
 
         let isCurrent = true;
-        
+
         llmService.getMessages(selectedLLM.id).then((chatMessages) => {
             if (isCurrent) {
                 setMessages(chatMessages);
@@ -30,11 +37,30 @@ function ChatPanel() {
         };
     }, [selectedLLM]);
 
+    const handleScroll = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        isPinnedToBottom.current = distanceFromBottom <= STICK_THRESHOLD_PX;
+    };
+
+    useLayoutEffect(() => {
+        const el = scrollRef.current;
+        if (!el || !isPinnedToBottom.current) return;
+
+        el.scrollTop = el.scrollHeight;
+    }, [messages]);
+
     if (!selectedLLM) return null;
 
     return (
-        <div className="relative h-dvh w-auto px-20 flex-1">
-            <div>
+        <div className="relative w-auto flex-1">
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="overflow-y-scroll h-dvh px-20 pt-10 pb-30"
+            >
                 {messages?.map((msg) => (
                     <Message
                         key={msg.id}

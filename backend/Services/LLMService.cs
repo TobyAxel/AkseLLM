@@ -99,14 +99,6 @@ namespace backend.Services
             if (user == null || user.Id == null)
                 throw new UnauthorizedAccessException("Invalid or expired session");
 
-            var llms = await supabase.From<LLMEntity>()
-                .Where(x => x.UserId == user.Id)
-                .Get();
-
-            // Limit llm count to 15, this is also enforced in RLS
-            if (llms.Models.Count >= 15)
-                throw new InvalidOperationException("The maximum amount of LLMs you can own has been reached.");
-
             var newLLM = new LLMEntity
             {
                 UserId = user.Id,
@@ -238,7 +230,7 @@ namespace backend.Services
 
             var messages = await supabase.From<MessageEntity>()
                 .Where(msg => msg.LLMId == id)
-                .Order("created_at", Supabase.Postgrest.Constants.Ordering.Ascending)
+                .Order("id", Supabase.Postgrest.Constants.Ordering.Descending)
                 .Limit(50)
                 .Get();
 
@@ -250,7 +242,7 @@ namespace backend.Services
                     Role = msg.Role!,
                     Content = msg.Content!,
                     CreatedAt = msg.CreatedAt
-                }).ToList()
+                }).Reverse().ToList()
             };
         }
 
@@ -275,72 +267,85 @@ namespace backend.Services
             if (llm == null)
                 throw new NotFoundException("LLM not found");
 
-            var userMessageEntity = new MessageEntity
+            var claimed = await supabase.Rpc<bool>("claim_llm_generation", new { target_llm = id });
+            if (!claimed)
+                throw new ConflictException("This LLM is already generating a response, please wait or try again later");
+
+            try
             {
-                Role = "user",
-                Content = message,
-                LLMId = id,
-                CreatedAt = DateTime.UtcNow,
-            };
-
-            var userMessage = await supabase
-                .From<MessageEntity>()
-                .Insert(userMessageEntity);
-
-            if (userMessage.Model == null)
-                throw new Exception("Failed to send message");
-
-            var historyResult = await supabase.From<MessageEntity>()
-                .Where(msg => msg.LLMId == id)
-                .Order("created_at", Supabase.Postgrest.Constants.Ordering.Ascending)
-                .Limit(10)
-                .Get();
-
-            var chatHistory = historyResult.Models.ToList();
-
-            // Check if given model is running
-            // If not, run up model first
-
-            // Send chat history & config to model
-            // Wait for response
-
-            // This is a placeholder response to be fixed once the product is actually complete
-            var assistantMessageEntity = new MessageEntity
-            {
-                Role = "assistant",
-                Content = "placeholder",
-                LLMId = id,
-                CreatedAt = DateTime.UtcNow,
-            };
-
-            // Add llm response to chat history
-            var assistantMessage = await supabase
-                .From<MessageEntity>()
-                .Insert(assistantMessageEntity);
-
-            if (assistantMessage.Model == null)
-                throw new Exception("Unexpected error happened while responding");
-
-            var response = new MessageResponseDto
-            {
-                UserMessage = new Message
+                var userMessageEntity = new MessageEntity
                 {
-                    Id = userMessage.Model.Id,
-                    Role = userMessage.Model.Role,
-                    Content = userMessage.Model.Content,
-                    CreatedAt = userMessage.Model.CreatedAt
-                },
-                
-                AssistantMessage = new Message
-                {
-                    Id = assistantMessage.Model.Id,
-                    Role = assistantMessage.Model.Role,
-                    Content = assistantMessage.Model.Content,
-                    CreatedAt = assistantMessage.Model.CreatedAt
-                }
-            };
+                    Role = "user",
+                    Content = message,
+                    LLMId = id,
+                    CreatedAt = DateTime.UtcNow,
+                };
 
-            return response;
+                var userMessage = await supabase
+                    .From<MessageEntity>()
+                    .Insert(userMessageEntity);
+
+                if (userMessage.Model == null)
+                    throw new Exception("Failed to send message");
+
+                var historyResult = await supabase.From<MessageEntity>()
+                    .Where(msg => msg.LLMId == id)
+                    .Order("id", Supabase.Postgrest.Constants.Ordering.Descending)
+                    .Limit(10)
+                    .Get();
+
+                var chatHistory = historyResult.Models
+                    .OrderBy(msg => msg.Id)
+                    .ToList();
+
+                // Check if given model is running
+                // If not, run up model first
+
+                // Send chat history & config to model
+                // Wait for response
+
+                // This is a placeholder response to be fixed once the product is actually complete
+                var assistantMessageEntity = new MessageEntity
+                {
+                    Role = "assistant",
+                    Content = "placeholder",
+                    LLMId = id,
+                    CreatedAt = DateTime.UtcNow,
+                };
+
+                // Add llm response to chat history
+                var assistantMessage = await supabase
+                    .From<MessageEntity>()
+                    .Insert(assistantMessageEntity);
+
+                if (assistantMessage.Model == null)
+                    throw new Exception("Unexpected error happened while responding");
+
+                var response = new MessageResponseDto
+                {
+                    UserMessage = new Message
+                    {
+                        Id = userMessage.Model.Id,
+                        Role = userMessage.Model.Role,
+                        Content = userMessage.Model.Content,
+                        CreatedAt = userMessage.Model.CreatedAt
+                    },
+
+                    AssistantMessage = new Message
+                    {
+                        Id = assistantMessage.Model.Id,
+                        Role = assistantMessage.Model.Role,
+                        Content = assistantMessage.Model.Content,
+                        CreatedAt = assistantMessage.Model.CreatedAt
+                    }
+                };
+
+                return response;
+            }
+            finally
+            {
+                await supabase.Rpc("release_llm_generation", new { target_llm = id });
+            }
         }
     }
 }

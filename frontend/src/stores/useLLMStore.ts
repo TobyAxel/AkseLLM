@@ -38,10 +38,7 @@ export const useLLMStore = create<LLMStore>((set) => ({
     setMessages: (messages) => set({ messages }),
     addMessage: (messages) => set((state) => ({ messages: [...state.messages, messages] })),
     confirmMessage: (tempId, confirmed) => set((state) => ({
-        messages: [
-            ...state.messages.filter((m) => m.id !== tempId),
-            confirmed,
-        ],
+        messages: state.messages.map((m) => m.id === tempId ? confirmed : m),
     })),
     cancelMessage: (tempId) => set((state) => ({
         messages: state.messages.filter((m) => m.id !== tempId),
