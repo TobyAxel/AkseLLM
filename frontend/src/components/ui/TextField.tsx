@@ -83,11 +83,15 @@ function TextField() {
                 />
 
                 <button
-                    className="text-neutral-300 transition cursor-pointer hover:text-white"
+                    className="text-neutral-300 w-4.5 transition cursor-pointer hover:text-white"
                     disabled={!canSend}
                     onClick={sendMessage}
                 >
-                    <FiSend size={18} />
+                    {isSendingMessage && (
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-800" />
+                    ) || (
+                        <FiSend size={18}/>
+                    )}
                 </button>
             </div>
         </div>

@@ -20,7 +20,7 @@ function Message({ id, role, content, createdAt }: MessageProps) {
         )
       )}
     >
-      <div className="flex flex-col max-w-[50%]">
+      <div className="flex flex-col max-w-[50%] wrap-anywhere">
         <div
           className={twMerge(
             clsx(
