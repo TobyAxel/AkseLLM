@@ -5,8 +5,7 @@ import TextField from "./ui/TextField";
 import { llmService } from "../services";
 import { useToastStore } from "../stores/useToastStore";
 
-// Band rather than an exact match, since subpixel rounding means the
-// distance is rarely exactly zero at non-default browser zoom
+// not exact zero, subpixel rounding rarely lands there
 const STICK_THRESHOLD_PX = 100;
 
 

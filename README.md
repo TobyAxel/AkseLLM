@@ -18,7 +18,7 @@ Core infrastructure, authentication, and LLM configuration management are comple
 - Edit or delete existing configurations
 - Persistent chat history per LLM (last 50 messages)
 - Optimistic message UI with rollback on failure
-- One response in flight per LLM: concurrent sends to the same LLM are rejected with 409 rather than racing
+- One response in flight per LLM, enforced in the database. Concurrent sends to the same LLM return 409
 - HttpOnly cookie authentication (SameSite=Strict)
 
 ## Not yet implemented
@@ -156,9 +156,7 @@ create policy "Users can send messages to their own llms"
     )
   );
 
--- Per-user LLM limit, enforced with a custom error message.
--- RLS policies can only return true/false, so the cap lives in a trigger
--- to control the message and HTTP status the client receives.
+-- Per-user LLM limit
 create or replace function enforce_llm_limit()
 returns trigger as $$
 begin
@@ -174,9 +172,8 @@ create trigger llm_limit_check
   for each row
   execute function enforce_llm_limit();
 
--- Serializes chat generation per LLM: a request claims the row before generating
--- and releases it after, so two concurrent sends to the same LLM can't race.
--- The lease expires on its own so a crashed request can't lock the LLM forever.
+-- Per-LLM generation lock, with an expiring lease so a crashed request
+-- does not lock the LLM permanently
 alter table llms add column generating_since timestamptz;
 
 create or replace function claim_llm_generation(target_llm bigint)
@@ -205,9 +202,11 @@ end;
 $$ language plpgsql;
 ```
 
-The RLS policies enforce ownership: users can only read and modify their own rows. The 15-configuration limit is enforced by the `enforce_llm_limit` trigger rather than the INSERT policy, because a policy can only evaluate to true or false and would surface a generic `row violates row-level security policy` error. The trigger uses PostgREST's `PT<status>` SQLSTATE convention to return a 400 with a readable message. To change the limit, edit the number in the function only. The `messages` table has no UPDATE or DELETE policy, so message history is append-only.
+The RLS policies enforce ownership on both tables. `messages` has no UPDATE or DELETE policy, so history is append-only.
 
-`claim_llm_generation` and `release_llm_generation` back the per-LLM send lock: `LLMService.SendMessageAsync` calls the former before generating and the latter in a `finally`, returning 409 if the claim fails. The 5-minute lease is a placeholder until real Ollama generation times are known — it needs to cover worst-case queue wait plus generation, not just generation itself, or a still-queued request can lose its lease to a new one.
+The 15-configuration limit lives in the `enforce_llm_limit` trigger rather than the INSERT policy. A policy can only return true or false, which surfaces as a generic `row violates row-level security policy` error. The trigger uses PostgREST's `PT<status>` SQLSTATE convention to return a 400 with a readable message instead. Change the limit by editing the number in the function.
+
+`claim_llm_generation` and `release_llm_generation` back the per-LLM send lock. `SendMessageAsync` claims before generating, releases in a `finally`, and returns 409 if the claim fails. The 5 minute lease must cover queue wait plus generation time, not just generation. It needs revisiting once real Ollama timings are known.
 
 ### Backend
 
