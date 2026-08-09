@@ -43,17 +43,17 @@ function AuthModal() {
     return (
         <Modal isOpen={activeModal === "auth"} size="md">
             {/* Header */}
-            <div className="relative p-6 pb-4 border-b border-neutral-700/50">
-                <h2 className="text-xl font-bold text-white">
+            <div className="relative p-6 pb-4 border-b border-line/50">
+                <h2 className="text-xl font-bold text-ink">
                     {view === "login" ? "Log In" : "Create an Account"}
                 </h2>
-                <div className="h-0.5 w-20 bg-linear-to-r from-neutral-600 to-transparent mt-2 rounded-full" />
+                <div className="h-0.5 w-20 bg-linear-to-r from-line-strong to-transparent mt-2 rounded-full" />
             </div>
 
             {/* Form */}
             <form onSubmit={(e: FormEvent) => e.preventDefault()} className="relative p-6 space-y-5">
                 {error && (
-                    <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-2">
+                    <p className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-lg px-4 py-2">
                         {error}
                     </p>
                 )}

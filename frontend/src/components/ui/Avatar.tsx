@@ -36,9 +36,9 @@ function Avatar({ username, size = "sm" }: AvatarProps) {
     return (
         <div className={`
             ${sizes[size]} ${getColor(resolvedUsername)}
-            rounded-full ring-2 ring-neutral-700 group-hover:ring-neutral-600
+            rounded-full ring-2 ring-line group-hover:ring-line-strong
             flex items-center justify-center
-            font-semibold text-white transition-all shrink-0
+            font-semibold text-ink transition-all shrink-0
         `}>
             {resolvedUsername.slice(0, 2).toUpperCase()}
         </div>

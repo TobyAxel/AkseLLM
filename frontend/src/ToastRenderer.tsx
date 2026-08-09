@@ -14,12 +14,12 @@ function ToastItem({ id, message }: { id: number; message: string }) {
     }, [id, dismissToast]);
 
     return (
-        <div className="flex items-start gap-3 bg-neutral-800 border border-red-500/30 rounded-lg shadow-lg shadow-black/30 px-4 py-3 w-80 animate-in fade-in slide-in-from-top-2">
-            <FiAlertCircle className="text-red-400 mt-0.5 shrink-0" size={18} />
-            <p className="text-sm text-neutral-200 flex-1">{message}</p>
+        <div className="flex items-start gap-3 bg-raised border border-danger-solid/30 rounded-lg shadow-lg shadow-black/30 px-4 py-3 w-80 animate-in fade-in slide-in-from-top-2">
+            <FiAlertCircle className="text-danger mt-0.5 shrink-0" size={18} />
+            <p className="text-sm text-ink-muted flex-1">{message}</p>
             <button
                 onClick={() => dismissToast(id)}
-                className="text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                className="text-ink-faint hover:text-ink transition-colors cursor-pointer shrink-0"
                 aria-label="Dismiss"
             >
                 <FiX size={16} />

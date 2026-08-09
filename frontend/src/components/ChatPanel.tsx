@@ -63,7 +63,6 @@ function ChatPanel() {
                 {messages?.map((msg) => (
                     <Message
                         key={msg.id}
-                        id={msg.id}
                         role={msg.role}
                         content={msg.content}
                         createdAt={msg.createdAt}

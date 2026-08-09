@@ -2,13 +2,12 @@ import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 
 type MessageProps = {
-  id: number;
   role: string;
   content: string;
   createdAt: string;
 };
 
-function Message({ id, role, content, createdAt }: MessageProps) {
+function Message({ role, content, createdAt }: MessageProps) {
   if (role === "system") return null;
 
   return (
@@ -26,8 +25,8 @@ function Message({ id, role, content, createdAt }: MessageProps) {
             clsx(
               "w-fit px-3 py-2 rounded-lg",
               role === "user"
-                ? "bg-neutral-700/70 self-end"
-                : "bg-neutral-800 self-start"
+                ? "bg-hover/70 self-end"
+                : "bg-raised self-start"
             )
           )}
         >
@@ -35,7 +34,7 @@ function Message({ id, role, content, createdAt }: MessageProps) {
         </div>
 
         {role === "user" && (
-          <span className="text-xs text-neutral-500 mt-1 self-end">
+          <span className="text-xs text-ink-faint mt-1 self-end">
             {new Date(createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",

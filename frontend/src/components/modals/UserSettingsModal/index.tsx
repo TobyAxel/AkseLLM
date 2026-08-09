@@ -29,14 +29,14 @@ function UserSettingsModal() {
     return (
         <Modal isOpen={activeModal === "userSettings"} onClose={closeModal} size="lg">
             {/* Header */}
-            <div className="relative p-6 pb-4 border-b border-neutral-700/50 flex items-center justify-between">
+            <div className="relative p-6 pb-4 border-b border-line/50 flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-white">Settings</h2>
-                    <div className="h-0.5 w-20 bg-linear-to-r from-neutral-600 to-transparent mt-2 rounded-full" />
+                    <h2 className="text-xl font-bold text-ink">Settings</h2>
+                    <div className="h-0.5 w-20 bg-linear-to-r from-line-strong to-transparent mt-2 rounded-full" />
                 </div>
                 <button
                     onClick={closeModal}
-                    className="p-2 rounded-lg hover:bg-neutral-700/50 transition-all duration-200 text-neutral-400 hover:text-white cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-hover/50 transition-all duration-200 text-ink-subtle hover:text-ink cursor-pointer"
                     aria-label="Close settings"
                 >
                     <FiX size={20} />
@@ -44,7 +44,7 @@ function UserSettingsModal() {
             </div>
 
             {/* Tabs */}
-            <div className="relative border-b border-neutral-700/50">
+            <div className="relative border-b border-line/50">
                 <div className="flex px-6">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
@@ -55,8 +55,8 @@ function UserSettingsModal() {
                                 onClick={() => setActiveTabId(tab.id)}
                                 className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all duration-200 border-b-2 cursor-pointer ${
                                     isActive
-                                        ? "text-white border-neutral-500"
-                                        : "text-neutral-400 border-transparent hover:text-neutral-300"
+                                        ? "text-ink border-line-active"
+                                        : "text-ink-subtle border-transparent hover:text-ink-muted"
                                 }`}
                             >
                                 <Icon size={16} />
@@ -71,10 +71,10 @@ function UserSettingsModal() {
             <div className="relative p-6 min-h-100">{activeTab.content}</div>
 
             {/* Footer */}
-            <div className="relative p-6 pt-4 border-t border-neutral-700/50">
+            <div className="relative p-6 pt-4 border-t border-line/50">
                 <button
                     onClick={() => openModal("logoutConfirm")}
-                    className="flex items-center gap-2 px-5 py-2.5 cursor-pointer bg-linear-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-200 font-medium shadow-lg shadow-red-900/30"
+                    className="flex items-center gap-2 px-5 py-2.5 cursor-pointer bg-linear-to-r from-danger-solid to-danger-deep text-ink rounded-lg hover:from-danger-solid hover:to-danger-solid transition-all duration-200 font-medium shadow-lg shadow-danger-deep/30"
                     aria-label="Logout"
                 >
                     <FiLogOut size={16} />

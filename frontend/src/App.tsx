@@ -39,7 +39,7 @@ function App() {
   if (authLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-gray-800" />
+        <div className="h-10 w-10 animate-spin rounded-full border-3 border-ink-muted border-t-raised" />
       </div>
     );
   }

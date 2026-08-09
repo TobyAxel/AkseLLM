@@ -27,6 +27,7 @@ Core infrastructure, authentication, and LLM configuration management are comple
 - Token refresh: sessions are not renewed automatically after the Supabase access token expires (~1 hour)
 - Account settings: the username update form is a stub with no backend wiring
 - General and Plan settings tabs are empty stubs
+  - Different settings options are planned, such as theme selection, as well as username & profile picture changing
 
 ---
 

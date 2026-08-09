@@ -68,14 +68,14 @@ function TextField() {
                 className={twMerge(
                     clsx(
                         "flex items-center gap-2",
-                        "bg-neutral-900/80 backdrop-blur-md",
-                        "border border-neutral-700",
+                        "bg-surface/80 backdrop-blur-md",
+                        "border border-line",
                         "rounded-2xl px-4 py-3 shadow-lg"
                     )
                 )}
             >
                 <input
-                    className="flex-1 bg-transparent outline-none text-white placeholder:text-neutral-500"
+                    className="flex-1 bg-transparent outline-none text-ink placeholder:text-ink-faint"
                     placeholder="Type a message..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -83,12 +83,12 @@ function TextField() {
                 />
 
                 <button
-                    className="text-neutral-300 w-4.5 transition cursor-pointer hover:text-white"
+                    className="text-ink-muted w-4.5 transition cursor-pointer hover:text-ink"
                     disabled={!canSend}
                     onClick={sendMessage}
                 >
                     {isSendingMessage && (
-                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-800" />
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-ink-muted border-t-raised" />
                     ) || (
                         <FiSend size={18}/>
                     )}
